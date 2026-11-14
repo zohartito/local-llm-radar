@@ -1,0 +1,250 @@
+{
+  "_comment": "Video generation fit and throughput log. Not a quality ranking. Not merged into Local Dev Score / the text-model composite. Every numeric cell is tagged measurement, vendor_claim, prediction, or unmeasured \u2014 never mixed inside one cell.",
+  "_updated": "2026-08-14",
+  "machines": {
+    "cuda-16gb": {
+      "id": "cuda-16gb",
+      "label": "16 GB CUDA",
+      "detail": "RTX 4070 Ti SUPER 16 GB VRAM, 128 GB system RAM"
+    },
+    "mps-64gb": {
+      "id": "mps-64gb",
+      "label": "64 GB unified MPS",
+      "detail": "Apple M4 Max 64 GB unified memory, Metal / MPS"
+    }
+  },
+  "rows": [
+    {
+      "id": "ltx-2.5-int8-convrot",
+      "model": "LTX-2.5",
+      "version": "2.5",
+      "weight_build": "int8-convrot",
+      "quantization": "int8-convrot",
+      "total_download_gb": {
+        "value": 47,
+        "unit": "GB",
+        "provenance": "measurement",
+        "note": "Model files total 47 GB on the M4 Max run that produced the MPS failure. Historical reported total; the raw download manifest is not attached, and the partial component list includes load sizes rather than a complete on-disk inventory."
+      },
+      "files": [
+        {
+          "role": "text_encoder",
+          "name": "gemma4-12b-with-proj-ltx-2.5-comfy-int8-convrot.safetensors",
+          "size_gb": 14.6,
+          "provenance": "measurement",
+          "note": "Loaded on the M4 Max run (reported 14.6 GB) before prompt enhance."
+        },
+        {
+          "role": "transformer",
+          "name": "ltx-2.5 distilled/dev transformer comfy-int8-convrot (loaded as 20.5 GB)",
+          "size_gb": 20.5,
+          "provenance": "measurement",
+          "note": "Loaded on the M4 Max run (reported 20.5 GB) after prompt enhance, before the first diffusion step."
+        },
+        {
+          "role": "video_vae",
+          "name": "vae/ltx-2.5-video-vae-bf16.safetensors",
+          "size_gb": 1.472,
+          "provenance": "vendor_claim",
+          "note": "Hugging Face sibling file size 1,472,223,346 bytes on Lightricks/LTX-2.5 (2026-08-12). Not a measured load."
+        },
+        {
+          "role": "audio_vae",
+          "name": "vae/ltx-2.5-audio-vae-bf16.safetensors",
+          "size_gb": 0.365,
+          "provenance": "vendor_claim",
+          "note": "Hugging Face sibling file size 364,866,540 bytes on Lightricks/LTX-2.5 (2026-08-12). Not a measured load."
+        },
+        {
+          "role": "upscaler",
+          "name": "latent_upscale_models/ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors",
+          "size_gb": 0.996,
+          "provenance": "vendor_claim",
+          "note": "Hugging Face sibling file size 995,778,752 bytes on Lightricks/LTX-2.5 (2026-08-12). Not a measured load."
+        }
+      ],
+      "vram": {
+        "stated_gb": {
+          "value": null,
+          "provenance": "unmeasured",
+          "note": "Official Lightricks/LTX-2.5 model card is gated; this row does not copy press-quoted 16 GB minima into the stated column."
+        },
+        "measured_peak": {
+          "value_gb": 33.9,
+          "of_gb": 34.8,
+          "what": "swap",
+          "provenance": "measurement",
+          "hardware": "M4 Max 64 GB (MPS)",
+          "note": "Swap peaked at 33.9 GB of 34.8 GB during the failed MPS run. This is host swap, not CUDA VRAM."
+        }
+      },
+      "runs": {
+        "cuda-16gb": {
+          "status": "yes-with-offload",
+          "provenance": "measurement",
+          "hardware": "RTX 4070 Ti SUPER 16 GB, 128 GB system RAM",
+          "stack": "Official ComfyUI text-to-video template, unmodified defaults and the same seed as the MPS attempt (1280x720 requested, 1280x704 emitted, 5 s, 24 fps, prompt-enhance on). ComfyUI 0.33.0, PyTorch 2.13.0+cu130, flags --lowvram --disable-smart-memory.",
+          "note": "Completed in 95.25 s and produced a 5.04 s clip with a synchronized AAC audio track. Cleared aten::_int_mm, the exact op that killed the MPS run, because CUDA implements it. Offload is load-bearing: the transformer alone is 21.5 GB against 16 GB of VRAM, and the log reports 'DynamicVRAM support detected and enabled' plus comfy-aimdo NVML pressure. A mid-run nvidia-smi sample showed 9394 MiB in use at 95% utilization; that is a single sample, not a measured peak, so it is not recorded in the vram column."
+        },
+        "mps-64gb": {
+          "status": "no",
+          "provenance": "measurement",
+          "hardware": "M4 Max 64 GB unified (MPS)",
+          "stack": "Official ComfyUI text-to-video template, unmodified defaults (1280\u00d7720, 5 s, 24 fps, prompt-enhance on). ComfyUI 0.32.0, PyTorch 2.13.0, flags --force-fp16 --lowvram --use-pytorch-cross-attention.",
+          "failure": {
+            "error_verbatim": "NotImplementedError: The operator 'aten::_int_mm' is not currently implemented\nfor the MPS device.",
+            "when": "Text encoder loaded, prompt enhancer finished (600 tokens @ ~7 it/s), transformer loaded, died before the first diffusion step.",
+            "wall_clock_s": 242.59,
+            "diffusion_steps_executed": 0,
+            "root_cause": "The recorded PyTorch 2.13.0 MPS run failed at aten::_int_mm. This establishes failure for that stack and weight build; newer runtimes and alternative quantizations have not been retested in this log."
+          }
+        }
+      },
+      "throughput": [
+        {
+          "provenance": "vendor_claim",
+          "hardware": "two NVIDIA GB200s",
+          "compute_seconds_per_output_second": 0.68,
+          "output_seconds": 10,
+          "compute_seconds": 6.8,
+          "resolution": "unspecified in the headline claim",
+          "duration_s": 10,
+          "fps": null,
+          "steps": null,
+          "note": "Vendor headline: 6.8 s to produce a 10 s clip on two NVIDIA GB200s. Datacenter hardware, not a consumer card. Not a quality score."
+        },
+        {
+          "provenance": "measurement",
+          "hardware": "M4 Max 64 GB (MPS)",
+          "compute_seconds_per_output_second": null,
+          "output_seconds": 0,
+          "compute_seconds": 242.59,
+          "resolution": "1280\u00d7720",
+          "duration_s": 5,
+          "fps": 24,
+          "steps": "0 diffusion steps (died before step 1)",
+          "note": "Prompt executed in 242.59 seconds. Zero seconds of video were produced."
+        },
+        {
+          "provenance": "measurement",
+          "hardware": "RTX 4070 Ti SUPER 16 GB (CUDA), 128 GB system RAM",
+          "compute_seconds_per_output_second": 18.9,
+          "output_seconds": 5.04,
+          "compute_seconds": 95.25,
+          "resolution": "1280x704 emitted (1280x720 requested)",
+          "duration_s": 5,
+          "fps": 24,
+          "steps": "3 sampling steps, 13.7 s of sampling (4.57 s/it)",
+          "note": "Recorded prompt execution: 95.25 seconds end to end, with 50.1 GB of loaded weights reported for this CUDA run. Sampling took 13.7 seconds; the remainder includes loading and decoding. Loaded weight size is not the same quantity as the Mac run\u2019s reported download total. Raw run receipts are not attached."
+        }
+      ],
+      "license": {
+        "status": "us-ok",
+        "separate_authorization_required": false,
+        "provenance": "vendor_claim",
+        "source_url": "https://github.com/Lightricks/LTX-2/blob/main/LICENSE-2_x",
+        "note": "License source checked 2026-10-22: LTX-2.x Community License, dated 2026-08-11, applies to LTX-2.5. Its grant is worldwide subject to use restrictions, commercial licensing requirements, and export controls. This records territory availability only; it is not blanket permission for every use. Read the linked terms."
+      }
+    },
+    {
+      "id": "minimax-h3-int8-convrot",
+      "model": "MiniMax-H3",
+      "version": "H3",
+      "weight_build": "int8-convrot (reduced-memory)",
+      "quantization": "int8-convrot",
+      "total_download_gb": {
+        "value": 42.5,
+        "unit": "GB",
+        "provenance": "vendor_claim",
+        "note": "Reduced-memory int8-convrot pack \u2248 21 GB diffusion + 15.7 GB text encoder + 5.2 GB video VAE + 605 MB audio VAE \u2248 42.5 GB. Stated sizes, not a download performed in this log."
+      },
+      "files": [
+        {
+          "role": "transformer",
+          "name": "int8-convrot diffusion (reduced-memory)",
+          "size_gb": 21,
+          "provenance": "vendor_claim",
+          "note": "Stated ~21 GB diffusion. Weights were not downloaded."
+        },
+        {
+          "role": "text_encoder",
+          "name": "int8-convrot text encoder (reduced-memory)",
+          "size_gb": 15.7,
+          "provenance": "vendor_claim",
+          "note": "Stated ~15.7 GB text encoder. Weights were not downloaded."
+        },
+        {
+          "role": "video_vae",
+          "name": "video VAE (reduced-memory pack)",
+          "size_gb": 5.2,
+          "provenance": "vendor_claim",
+          "note": "Stated ~5.2 GB video VAE. Weights were not downloaded."
+        },
+        {
+          "role": "audio_vae",
+          "name": "audio VAE (reduced-memory pack)",
+          "size_gb": 0.605,
+          "provenance": "vendor_claim",
+          "note": "Stated ~605 MB audio VAE. Weights were not downloaded."
+        }
+      ],
+      "vram": {
+        "stated_gb": {
+          "value": null,
+          "provenance": "unmeasured",
+          "note": "No stated consumer VRAM figure recorded. Weights were not downloaded or loaded."
+        },
+        "measured_peak": {
+          "value_gb": null,
+          "of_gb": null,
+          "what": null,
+          "provenance": "unmeasured",
+          "hardware": "none \u2014 weights not loaded",
+          "note": "No peak measurement. US operator does not have authorization to run the weights."
+        }
+      },
+      "runs": {
+        "cuda-16gb": {
+          "status": "unmeasured",
+          "provenance": "unmeasured",
+          "hardware": "RTX 4070 Ti SUPER 16 GB, 128 GB system RAM",
+          "note": "Not run. License gate first: US-based use of the public community license is excluded."
+        },
+        "mps-64gb": {
+          "status": "no",
+          "provenance": "prediction",
+          "hardware": "M4 Max 64 GB unified (MPS)",
+          "note": "Predicted to hit the same aten::_int_mm wall as LTX-2.5 int8-convrot on MPS, because the reduced-memory H3 pack is also int8-convrot. Not a measurement. Do not treat this as a run.",
+          "failure": {
+            "error_verbatim": "Not implemented \u2014 prediction only. Expected failure mode if someone runs the int8-convrot pack on MPS: NotImplementedError: The operator 'aten::_int_mm' is not currently implemented for the MPS device.",
+            "when": "Not run. Predicted at quantized-matmul / first diffusion step, by analogy with the LTX-2.5 int8-convrot MPS measurement.",
+            "wall_clock_s": null,
+            "diffusion_steps_executed": null,
+            "root_cause": "Prediction based on the historical LTX-2.5 MPS failure, not a test of H3 or current PyTorch. Current support remains unverified."
+          }
+        }
+      },
+      "throughput": [
+        {
+          "provenance": "unmeasured",
+          "hardware": "none \u2014 weights not downloaded",
+          "compute_seconds_per_output_second": null,
+          "output_seconds": null,
+          "compute_seconds": null,
+          "resolution": null,
+          "duration_s": null,
+          "fps": null,
+          "steps": null,
+          "note": "No throughput cell. License gate is the finding. Do not copy affiliate or datacenter speed claims into this row."
+        }
+      ],
+      "license": {
+        "status": "us-excluded",
+        "separate_authorization_required": true,
+        "provenance": "measurement",
+        "source_url": "https://huggingface.co/MiniMaxAI/MiniMax-H3/blob/main/LICENSE",
+        "note": "MiniMax H3 Community License (release date 2026-08-02): Applicable Territory is worldwide excluding the European Union, United Kingdom, Republic of Korea, and United States of America. Licensees may not use, reproduce, modify, distribute, or display the MiniMax H3 Works or any of their Outputs outside the Applicable Territory. US/EU/UK/KR operators need a separate authorization (application form: https://platform.minimax.io/h3-license). Weights were not downloaded or benchmarked."
+      }
+    }
+  ]
+}

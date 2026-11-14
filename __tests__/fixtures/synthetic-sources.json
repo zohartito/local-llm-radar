@@ -1,0 +1,25 @@
+{
+  "_comment": "SYNTHETIC test fixture. Invented model names and scores, not copied from any leaderboard. Lets the merge/score pipeline run offline. Licence: CC0-1.0.",
+  "sources": [
+    {
+      "source_id": "zeroeval",
+      "source_name": "Synthetic roster",
+      "fetched_at": "2026-11-14T00:00:00Z",
+      "models": [
+        { "name": "Example Coder 32B", "provider": "Example Lab", "llm_stats_model_id": "example-coder-32b", "license": "Apache 2.0", "params_b": 32, "context_k": 128, "release": "2026-09-01", "scores": { "gpqa_diamond": 71, "swe_bench": 62, "aime_2025": 80, "mmlu_pro": 78 } },
+        { "name": "Example Chat 8B", "provider": "Example Lab", "llm_stats_model_id": "example-chat-8b", "license": "Apache 2.0", "params_b": 8, "context_k": 32, "release": "2026-06-01", "scores": { "gpqa_diamond": 48, "swe_bench": 31, "aime_2025": 40, "mmlu_pro": 61 } },
+        { "name": "Sample Reasoner 70B", "provider": "Sample AI", "llm_stats_model_id": "sample-reasoner-70b", "license": "MIT", "params_b": 70, "context_k": 128, "release": "2026-10-01", "scores": { "gpqa_diamond": 79, "swe_bench": 55, "aime_2025": 91, "mmlu_pro": 83 } }
+      ]
+    },
+    {
+      "source_id": "swebench",
+      "source_name": "Synthetic evaluator",
+      "fetched_at": "2026-11-14T00:00:00Z",
+      "models": [
+        { "name": "Example Coder 32B", "scores": { "swe_bench": 60 } },
+        { "name": "Example Chat 8B", "scores": { "swe_bench": 30 } },
+        { "name": "Sample Reasoner 70B", "scores": { "swe_bench": 54 } }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,82 @@
+{
+  "schema": "local-llm-radar/local-measurement@1",
+  "licence": "CC-BY-4.0",
+  "measuredAt": "2026-11-14T19:43:38.216Z",
+  "machine": {
+    "label": "m4-max-64gb",
+    "specs": {
+      "os": "Darwin 27.2.0",
+      "arch": "arm64",
+      "cpu": "Apple M4 Max",
+      "cpuThreads": 16,
+      "memoryGiB": 64,
+      "unifiedMemory": true,
+      "gpus": []
+    }
+  },
+  "runtime": {
+    "name": "ollama",
+    "version": "0.40.16",
+    "remote": false
+  },
+  "model": {
+    "name": "qwen3-vl:8b",
+    "family": "qwen3vl",
+    "parameterSize": "8.2B",
+    "quantization": "Q4_K_M",
+    "format": "gguf",
+    "maxContext": 262144
+  },
+  "workload": {
+    "requestedContext": 4096,
+    "loadedContext": 4096,
+    "approxPromptTokens": 1024,
+    "maxGeneratedTokens": 256,
+    "temperature": 0,
+    "seed": 42,
+    "think": false,
+    "runs": 3,
+    "note": "Run 1 starts with the model unloaded from Ollama (the OS file cache may still hold the weights). Prompts differ per run so prompt processing is not served from cache. Medians use runs 2+."
+  },
+  "summary": {
+    "coldLoadMs": 2300,
+    "promptTokensPerSecondMedian": 694.34,
+    "generationTokensPerSecondMedian": 70.4,
+    "peakMemory": {
+      "ollamaReportedMiB": 4953,
+      "ollamaReportedVramMiB": 4953,
+      "runnerProcessRssMiB": 6658,
+      "gpuUsedAboveBaselineMiB": null,
+      "method": "Sampled every 250 ms: Ollama /api/ps size and size_vram; ps RSS of the runner process serving this model blob (macOS/Linux); nvidia-smi memory.used minus the pre-run baseline (NVIDIA). Peaks between samples can be missed."
+    }
+  },
+  "runs": [
+    {
+      "run": 1,
+      "loadMs": 2300,
+      "totalMs": 7359,
+      "promptTokens": 928,
+      "promptTokensPerSecond": 691.87,
+      "generatedTokens": 256,
+      "generationTokensPerSecond": 69.15
+    },
+    {
+      "run": 2,
+      "loadMs": 1,
+      "totalMs": 4924,
+      "promptTokens": 928,
+      "promptTokensPerSecond": 721.43,
+      "generatedTokens": 256,
+      "generationTokensPerSecond": 70.55
+    },
+    {
+      "run": 3,
+      "loadMs": 1,
+      "totalMs": 5045,
+      "promptTokens": 928,
+      "promptTokensPerSecond": 667.25,
+      "generatedTokens": 256,
+      "generationTokensPerSecond": 70.25
+    }
+  ]
+}

@@ -1,0 +1,374 @@
+[
+  {
+    "id": "yolo11",
+    "date": "2024-09-27",
+    "boards": [
+      "object-detection",
+      "image-segmentation"
+    ],
+    "names": [
+      "YOLO11-N",
+      "YOLO11-S",
+      "YOLO11-M",
+      "YOLO11-L",
+      "YOLO11-X",
+      "YOLOv11-N-Seg",
+      "YOLOv11-S-Seg",
+      "YOLOv11-M-Seg",
+      "YOLOv11-L-Seg",
+      "YOLOv11-XL-Seg"
+    ],
+    "sourceUrl": "https://docs.ultralytics.com/models/yolo11/",
+    "checkedAt": "2026-10-27",
+    "event": "Model / weights release",
+    "note": "Initial YOLO11 model-family release; not a later checkpoint revision.",
+    "proof": {
+      "url": "https://raw.githubusercontent.com/ultralytics/ultralytics/main/docs/en/models/yolo11.md",
+      "anchor": "YOLO11 was released",
+      "within": 250,
+      "includes": [
+        "September 27, 2024"
+      ]
+    }
+  },
+  {
+    "id": "yolov8",
+    "date": "2023-01-10",
+    "boards": [
+      "image-segmentation"
+    ],
+    "names": [
+      "YOLOv8-N-Seg",
+      "YOLOv8-S-Seg",
+      "YOLOv8-M-Seg",
+      "YOLOv8-L-Seg",
+      "YOLOv8-XL-Seg"
+    ],
+    "sourceUrl": "https://docs.ultralytics.com/models/yolov8/",
+    "checkedAt": "2026-10-27",
+    "event": "Model / weights release",
+    "note": "Initial YOLOv8 model-family release; not a later checkpoint revision.",
+    "proof": {
+      "url": "https://raw.githubusercontent.com/ultralytics/ultralytics/main/docs/en/models/yolov8.md",
+      "anchor": "released",
+      "within": 300,
+      "includes": [
+        "January 10, 2023"
+      ]
+    }
+  },
+  {
+    "id": "yolo26",
+    "date": "2026-01-14",
+    "boards": [
+      "object-detection",
+      "image-segmentation"
+    ],
+    "names": [
+      "YOLO26-N",
+      "YOLO26-N-Seg",
+      "YOLO26-S",
+      "YOLO26-S-Seg",
+      "YOLO26-M",
+      "YOLO26-M-Seg",
+      "YOLO26-L",
+      "YOLO26-L-Seg",
+      "YOLO26-X",
+      "YOLO26-X-Seg"
+    ],
+    "sourceUrl": "https://www.ultralytics.com/news/ultralytics-redefines-state-of-the-art-vision-ai-with-yolo26",
+    "checkedAt": "2026-10-27",
+    "event": "Model / weights release",
+    "note": "Public model-family launch. Does not apply to later semantic-segmentation or depth models.",
+    "proof": {
+      "url": "https://www.ultralytics.com/news/ultralytics-redefines-state-of-the-art-vision-ai-with-yolo26",
+      "anchor": "January 14, 2026",
+      "within": 1500,
+      "includes": [
+        "officially launching",
+        "Ultralytics YOLO26"
+      ]
+    }
+  },
+  {
+    "id": "rfdetr-1.2.0",
+    "date": "2025-07-23",
+    "boards": [
+      "object-detection",
+      "image-segmentation"
+    ],
+    "names": [
+      "RF-DETR-N",
+      "RF-DETR-S",
+      "RF-DETR-M"
+    ],
+    "sourceUrl": "https://github.com/roboflow/rf-detr/releases/tag/1.2.0",
+    "checkedAt": "2026-10-27",
+    "event": "Model / weights release",
+    "note": "New Nano, Small and Medium weights in v1.2.0.",
+    "proof": {
+      "url": "https://api.github.com/repos/roboflow/rf-detr/releases/tags/1.2.0",
+      "anchor": "\"published_at\"",
+      "within": 30000,
+      "includes": [
+        "2025-07-23",
+        "RFDETRNano",
+        "RFDETRSmall",
+        "RFDETRMedium"
+      ]
+    }
+  },
+  {
+    "id": "rfdetr-1.4.0",
+    "date": "2026-01-22",
+    "boards": [
+      "object-detection",
+      "image-segmentation"
+    ],
+    "names": [
+      "RF-DETR-L",
+      "RF-DETR-XL",
+      "RF-DETR-2XL",
+      "RF-DETR-Seg-N",
+      "RF-DETR-Seg-S",
+      "RF-DETR-Seg-M",
+      "RF-DETR-Seg-L",
+      "RF-DETR-Seg-XL",
+      "RF-DETR-Seg-2XL"
+    ],
+    "sourceUrl": "https://github.com/roboflow/rf-detr/releases/tag/1.4.0",
+    "checkedAt": "2026-10-27",
+    "event": "Model / weights release",
+    "note": "New checkpoints in v1.4.0; not the older Base/Large or Seg Preview releases.",
+    "proof": {
+      "url": "https://api.github.com/repos/roboflow/rf-detr/releases/tags/1.4.0",
+      "anchor": "\"published_at\"",
+      "within": 30000,
+      "includes": [
+        "2026-01-22",
+        "New pre-trained checkpoints",
+        "instance segmentation"
+      ]
+    }
+  },
+  {
+    "id": "dfine",
+    "date": "2024-10-18",
+    "boards": [
+      "object-detection"
+    ],
+    "names": [
+      "D-FINE-S",
+      "D-FINE-M",
+      "D-FINE-L",
+      "D-FINE-X"
+    ],
+    "sourceUrl": "https://github.com/Peterande/D-FINE#-updates",
+    "checkedAt": "2026-10-27",
+    "event": "Model / weights release",
+    "note": "Initial model release; Nano launched separately.",
+    "proof": {
+      "url": "https://raw.githubusercontent.com/Peterande/D-FINE/master/README.md",
+      "anchor": "2024.10.18",
+      "within": 200,
+      "includes": [
+        "Release D-FINE series"
+      ]
+    }
+  },
+  {
+    "id": "dfine-n",
+    "date": "2024-11-07",
+    "boards": [
+      "object-detection"
+    ],
+    "names": [
+      "D-FINE-N"
+    ],
+    "sourceUrl": "https://github.com/Peterande/D-FINE#-updates",
+    "checkedAt": "2026-10-27",
+    "event": "Model / weights release",
+    "note": "Initial model release; Nano launched separately.",
+    "proof": {
+      "url": "https://raw.githubusercontent.com/Peterande/D-FINE/master/README.md",
+      "anchor": "2024.11.07",
+      "within": 200,
+      "includes": [
+        "Release **D-FINE-N**"
+      ]
+    }
+  },
+  {
+    "id": "unidepth-v1",
+    "date": "2024-04-01",
+    "boards": [
+      "depth-estimation"
+    ],
+    "names": [
+      "UniDepth"
+    ],
+    "sourceUrl": "https://github.com/lpiccinelli-eth/UniDepth#news",
+    "checkedAt": "2026-10-27",
+    "event": "Model / weights release",
+    "note": "Weights release, not paper, training-code or Python-package date.",
+    "proof": {
+      "url": "https://raw.githubusercontent.com/lpiccinelli-eth/UniDepth/main/README.md",
+      "anchor": "01.04.2024",
+      "within": 150,
+      "includes": [
+        "Inference code and V1 models are released"
+      ]
+    }
+  },
+  {
+    "id": "unidepth-v2",
+    "date": "2025-02-28",
+    "boards": [
+      "depth-estimation"
+    ],
+    "names": [
+      "UniDepthV2"
+    ],
+    "sourceUrl": "https://github.com/lpiccinelli-eth/UniDepth#news",
+    "checkedAt": "2026-10-27",
+    "event": "Model / weights release",
+    "note": "Weights release, not paper, training-code or Python-package date.",
+    "proof": {
+      "url": "https://raw.githubusercontent.com/lpiccinelli-eth/UniDepth/main/README.md",
+      "anchor": "28.02.2025",
+      "within": 150,
+      "includes": [
+        "Release UniDepthV2"
+      ]
+    }
+  },
+  {
+    "id": "paddleocr-vl",
+    "date": "2025-10-16",
+    "boards": [
+      "document-parsing",
+      "ocr",
+      "ocr-chinese"
+    ],
+    "names": [
+      "PaddleOCR-VL"
+    ],
+    "sourceUrl": "https://github.com/PaddlePaddle/PaddleOCR#-latest-updates",
+    "checkedAt": "2026-10-27",
+    "event": "Model / weights release",
+    "note": "Dated release-note section explicitly announces model availability.",
+    "proof": {
+      "url": "https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/main/README.md",
+      "anchor": "2025.10.16: Release of PaddleOCR 3.3.0",
+      "within": 1800,
+      "includes": [
+        "PaddleOCR-VL",
+        "The model has been released"
+      ]
+    }
+  },
+  {
+    "id": "paddleocr-vl-1.5",
+    "date": "2026-01-29",
+    "boards": [
+      "document-parsing",
+      "ocr",
+      "ocr-chinese"
+    ],
+    "names": [
+      "PaddleOCR-VL-1.5"
+    ],
+    "sourceUrl": "https://github.com/PaddlePaddle/PaddleOCR#-latest-updates",
+    "checkedAt": "2026-10-27",
+    "event": "Model / weights release",
+    "note": "Dated release-note section explicitly announces model availability.",
+    "proof": {
+      "url": "https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/main/README.md",
+      "anchor": "2026.01.29: Release of PaddleOCR 3.4.0",
+      "within": 1800,
+      "includes": [
+        "PaddleOCR-VL-1.5",
+        "is now live!"
+      ]
+    }
+  },
+  {
+    "id": "paddleocr-vl-1.6",
+    "date": "2026-05-28",
+    "boards": [
+      "document-parsing",
+      "ocr",
+      "ocr-chinese"
+    ],
+    "names": [
+      "PaddleOCR-VL-1.6"
+    ],
+    "sourceUrl": "https://github.com/PaddlePaddle/PaddleOCR#-latest-updates",
+    "checkedAt": "2026-10-27",
+    "event": "Model / weights release",
+    "note": "Dated release-note section explicitly announces model availability.",
+    "proof": {
+      "url": "https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/main/README.md",
+      "anchor": "2026.05.28: Release of PaddleOCR 3.6.0",
+      "within": 1800,
+      "includes": [
+        "PaddleOCR-VL-1.6",
+        "Available on"
+      ]
+    }
+  },
+  {
+    "id": "deepseek-ocr2",
+    "date": "2026-01-27",
+    "boards": [
+      "document-parsing",
+      "ocr",
+      "ocr-chinese"
+    ],
+    "names": [
+      "DeepSeek-OCR 2",
+      "DeepSeek-OCR2"
+    ],
+    "sourceUrl": "https://github.com/deepseek-ai/DeepSeek-OCR#news",
+    "checkedAt": "2026-10-27",
+    "event": "Model / weights release",
+    "note": "Dated model announcement linked to the official OCR 2 weights and inference release.",
+    "proof": {
+      "url": "https://raw.githubusercontent.com/deepseek-ai/DeepSeek-OCR/main/README.md",
+      "anchor": "[2026/01/27]",
+      "within": 220,
+      "includes": [
+        "We present",
+        "DeepSeek-OCR2"
+      ]
+    }
+  },
+  {
+    "id": "embeddinggemma-2",
+    "date": "2026-10-06",
+    "boards": [
+      "embeddings",
+      "embeddings-english",
+      "code-embeddings",
+      "image-embeddings",
+      "audio-embeddings",
+      "video-embeddings",
+      "document-retrieval"
+    ],
+    "names": [
+      "google/embeddinggemma-2"
+    ],
+    "sourceUrl": "https://blog.google/innovation-and-ai/technology/developers-tools/embeddinggemma-2/",
+    "checkedAt": "2026-10-27",
+    "event": "Model / weights release",
+    "note": "Google\u2019s dated launch announcement; not the model-card last-updated timestamp.",
+    "proof": {
+      "url": "https://blog.google/innovation-and-ai/technology/developers-tools/embeddinggemma-2/",
+      "anchor": "Oct 06, 2026",
+      "within": 30000,
+      "includes": [
+        "launching EmbeddingGemma 2"
+      ]
+    }
+  }
+]

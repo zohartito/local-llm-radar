@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Repo pre-commit: block commits containing credential-shaped strings.
+# Enabled via: git config core.hooksPath .githooks
+# Bypass a false positive once with `git commit --no-verify`, then fix the
+# rule (.gitleaks.toml allowlist), not the habit.
+set -u
+
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo "pre-commit: gitleaks is not installed, refusing to commit unscanned." >&2
+  echo "  install: brew install gitleaks   (mac)" >&2
+  echo "           winget install gitleaks (pc)" >&2
+  echo "  bypass once: git commit --no-verify" >&2
+  exit 1
+fi
+
+exec gitleaks git --pre-commit --staged --redact --no-banner

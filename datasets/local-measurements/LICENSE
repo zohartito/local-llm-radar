@@ -1,0 +1,13 @@
+Local LLM Radar local measurements
+Copyright (c) 2026 Zohar Tito
+
+The measurement records in this folder are licensed under the Creative Commons
+Attribution 4.0 International licence (CC BY 4.0):
+https://creativecommons.org/licenses/by/4.0/legalcode
+
+You may share and adapt them for any purpose, including commercially, provided
+you credit "Local LLM Radar local measurements", link to this repository, and
+indicate if changes were made.
+
+The code that produces them (scripts/measure-local.ts) is MIT licensed, like the
+rest of this repository.

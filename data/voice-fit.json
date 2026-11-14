@@ -1,0 +1,950 @@
+{
+  "kind": "voice-fit-log",
+  "checked": "2026-10-23",
+  "scope": "English voice interfaces for existing coding agents and local conversational alternatives. Manually checked source evidence; no local model benchmark.",
+  "machines": [
+    {
+      "id": "a6000-48",
+      "label": "RTX A6000 · 48 GiB",
+      "capacity_gib": 48,
+      "memory_type": "dedicated-vram",
+      "provenance": "live-inventory",
+      "checked": "2026-10-23",
+      "note": "PC: 128 GiB class system RAM, Windows 11 / WSL2. Capacity verified; free memory changes with other workloads."
+    },
+    {
+      "id": "4070ti-super-16",
+      "label": "RTX 4070 Ti SUPER · 16 GiB",
+      "capacity_gib": 16,
+      "memory_type": "dedicated-vram",
+      "provenance": "live-inventory",
+      "checked": "2026-10-23",
+      "note": "Same PC, separate GPU. Its memory is not pooled with the A6000 for these runtime assessments."
+    },
+    {
+      "id": "m4-max-64",
+      "label": "Apple M4 Max · 64 GiB",
+      "capacity_gib": 64,
+      "memory_type": "unified-memory",
+      "provenance": "live-inventory",
+      "checked": "2026-10-23",
+      "note": "Mac: live inventory verified 2026-10-23. Unified memory is shared with macOS and applications; 64 GiB is not all available to inference."
+    }
+  ],
+  "sources": [
+    {
+      "id": "codex-voice",
+      "title": "Codex voice conversations",
+      "url": "https://learn.chatgpt.com/docs/features/voice",
+      "publisher": "OpenAI",
+      "checked": "2026-10-23"
+    },
+    {
+      "id": "codex-app-server",
+      "title": "Codex App Server",
+      "url": "https://learn.chatgpt.com/docs/app-server",
+      "publisher": "OpenAI",
+      "checked": "2026-10-23"
+    },
+    {
+      "id": "claude-headless",
+      "title": "Claude Code programmatic sessions",
+      "url": "https://code.claude.com/docs/en/headless",
+      "publisher": "Anthropic",
+      "checked": "2026-10-23"
+    },
+    {
+      "id": "claude-voice",
+      "title": "Claude Code voice dictation",
+      "url": "https://code.claude.com/docs/en/voice-dictation",
+      "publisher": "Anthropic",
+      "checked": "2026-10-23"
+    },
+    {
+      "id": "scrivo",
+      "title": "Scrivo local dictation",
+      "url": "https://github.com/zohartito/scrivo",
+      "publisher": "Scrivo",
+      "checked": "2026-10-23"
+    },
+    {
+      "id": "nemotron-asr",
+      "title": "Nemotron streaming English ASR 0.6B",
+      "url": "https://huggingface.co/nvidia/nemotron-speech-streaming-en-0.6b",
+      "publisher": "NVIDIA",
+      "checked": "2026-10-23"
+    },
+    {
+      "id": "kokoro",
+      "title": "Kokoro 82M speech synthesis",
+      "url": "https://huggingface.co/hexgrad/Kokoro-82M",
+      "publisher": "hexgrad",
+      "checked": "2026-10-23"
+    },
+    {
+      "id": "personaplex",
+      "title": "PersonaPlex official runtime",
+      "url": "https://github.com/NVIDIA/personaplex",
+      "publisher": "NVIDIA",
+      "checked": "2026-10-23"
+    },
+    {
+      "id": "minicpm",
+      "title": "MiniCPM-o 4.5 runtime requirements",
+      "url": "https://github.com/OpenBMB/MiniCPM-V/blob/main/docs/minicpm_o4dot5_en.md",
+      "publisher": "OpenBMB",
+      "checked": "2026-10-23"
+    },
+    {
+      "id": "voicechat",
+      "title": "NemotronLabs VoiceChat official runtime",
+      "url": "https://github.com/NVIDIA-NeMo/Speech/blob/nemotron-labs-voicechat/README.md",
+      "publisher": "NVIDIA",
+      "checked": "2026-10-23"
+    },
+    {
+      "id": "voicechat-card",
+      "title": "NemotronLabs VoiceChat 11B model card",
+      "url": "https://huggingface.co/nvidia/NVIDIA-NemotronLabs-VoiceChat-11B",
+      "publisher": "NVIDIA",
+      "checked": "2026-10-23"
+    },
+    {
+      "id": "voicechat-mlx",
+      "title": "VoiceChat MLX Swift port and benchmark conditions",
+      "url": "https://github.com/soniqo/speech-swift/blob/main/docs/models/voicechat.md",
+      "publisher": "soniqo (community port maintainer)",
+      "checked": "2026-10-23"
+    },
+    {
+      "id": "speakrail",
+      "title": "Speakrail requirements and architecture",
+      "url": "https://github.com/speakrail/speakrail",
+      "publisher": "Speakrail",
+      "checked": "2026-10-23"
+    },
+    {
+      "id": "unmute",
+      "title": "Unmute requirements and tool support",
+      "url": "https://github.com/kyutai-labs/unmute",
+      "publisher": "Kyutai",
+      "checked": "2026-10-23"
+    }
+  ],
+  "rows": [
+    {
+      "id": "agent-speech-bridge",
+      "model": "Local speech → your coding agent",
+      "runtime": "Proposed Scrivo / ASR → real Codex or Claude Code session → Kokoro",
+      "maintainer": "proposed-integration",
+      "architecture": "speech-bridge",
+      "interaction": {
+        "text": "Start with turn-based speech, then add interruption and spoken progress. The agent keeps working between spoken updates.",
+        "provenance": "inference",
+        "sources": [
+          "codex-app-server",
+          "claude-headless"
+        ]
+      },
+      "persona": {
+        "text": "Choose the voice in TTS; choose the reasoning model and effort inside the agent harness.",
+        "provenance": "inference",
+        "sources": [
+          "kokoro",
+          "codex-app-server"
+        ]
+      },
+      "tools": {
+        "status": "integration-required",
+        "evidence": {
+          "text": "Preserve session context, agent loop, tools and permissions through the actual harness. A chat-completions endpoint alone does not establish this integration.",
+          "provenance": "inference",
+          "sources": [
+            "codex-app-server",
+            "claude-headless"
+          ]
+        }
+      },
+      "languages": {
+        "text": "English target. Scrivo offers local dictation; Nemotron 0.6B is an English streaming ASR option. Kokoro supplies speech output.",
+        "provenance": "published",
+        "sources": [
+          "scrivo",
+          "nemotron-asr",
+          "kokoro"
+        ]
+      },
+      "caveat": {
+        "text": "Recommended architecture for sustained coding work; this bridge has not been connected or benchmarked here. Local speech does not make the selected hosted coding model local.",
+        "provenance": "inference",
+        "sources": [
+          "codex-app-server",
+          "claude-headless"
+        ]
+      },
+      "metrics": [
+        {
+          "label": "Local peak memory",
+          "value": null,
+          "unit": "GB",
+          "quantity": "peak-memory",
+          "provenance": "unknown",
+          "hardware": "Selected machine",
+          "conditions": "No local voice run or peak-memory receipt is recorded.",
+          "sources": []
+        }
+      ],
+      "fits": {
+        "a6000-48": {
+          "status": "integration-required",
+          "provenance": "inference",
+          "note": "Keep the coding model in its real agent session. Local speech placement and end-to-end latency need integration tests.",
+          "sources": [
+            "codex-app-server",
+            "claude-headless"
+          ]
+        },
+        "4070ti-super-16": {
+          "status": "integration-required",
+          "provenance": "inference",
+          "note": "Keep the coding model in its real agent session. Local speech placement and end-to-end latency need integration tests.",
+          "sources": [
+            "codex-app-server",
+            "claude-headless"
+          ]
+        },
+        "m4-max-64": {
+          "status": "integration-required",
+          "provenance": "inference",
+          "note": "Keep the coding model in its real agent session. Local speech placement and end-to-end latency need integration tests.",
+          "sources": [
+            "codex-app-server",
+            "claude-headless"
+          ]
+        }
+      }
+    },
+    {
+      "id": "personaplex-official",
+      "model": "PersonaPlex 7B",
+      "runtime": "Official Moshi / PyTorch CUDA; optional CPU offload",
+      "maintainer": "official",
+      "architecture": "native-full-duplex",
+      "interaction": {
+        "text": "Native simultaneous listening and speaking with interruption and conversational turn-taking.",
+        "provenance": "published",
+        "sources": [
+          "personaplex"
+        ]
+      },
+      "persona": {
+        "text": "Text role prompts plus voice conditioning; 18 supplied voice embeddings.",
+        "provenance": "published",
+        "sources": [
+          "personaplex"
+        ]
+      },
+      "tools": {
+        "status": "not-established",
+        "evidence": {
+          "text": "The official runtime does not establish a coding-agent tool interface.",
+          "provenance": "unknown",
+          "sources": [
+            "personaplex"
+          ]
+        }
+      },
+      "languages": {
+        "text": "English conversation is the evaluation target here; other languages were not assessed.",
+        "provenance": "inference",
+        "sources": [
+          "personaplex"
+        ]
+      },
+      "caveat": {
+        "text": "Useful natural-conversation baseline. Role prompting does not establish the reasoning, tools or persistence of a coding harness.",
+        "provenance": "inference",
+        "sources": [
+          "personaplex"
+        ]
+      },
+      "metrics": [
+        {
+          "label": "Stated runtime minimum",
+          "value": null,
+          "unit": "GB",
+          "quantity": "runtime-requirement",
+          "provenance": "unknown",
+          "hardware": "CUDA",
+          "conditions": "No numeric minimum established by the linked official README.",
+          "sources": [
+            "personaplex"
+          ]
+        },
+        {
+          "label": "Local peak memory",
+          "value": null,
+          "unit": "GB",
+          "quantity": "peak-memory",
+          "provenance": "unknown",
+          "hardware": "Selected machine",
+          "conditions": "No local voice run or peak-memory receipt is recorded.",
+          "sources": []
+        }
+      ],
+      "fits": {
+        "a6000-48": {
+          "status": "candidate",
+          "provenance": "inference",
+          "note": "A6000 is a sensible first trial; official CUDA path exists, but peak memory and real-time speed are unmeasured.",
+          "sources": [
+            "personaplex"
+          ]
+        },
+        "4070ti-super-16": {
+          "status": "conditional",
+          "provenance": "inference",
+          "note": "Official CPU offload is available. 16 GiB residency and conversational latency remain unmeasured.",
+          "sources": [
+            "personaplex"
+          ]
+        },
+        "m4-max-64": {
+          "status": "unknown",
+          "provenance": "unknown",
+          "note": "This row covers the official CUDA path. Apple support and speed require a separately verified port.",
+          "sources": [
+            "personaplex"
+          ]
+        }
+      }
+    },
+    {
+      "id": "minicpm-omni",
+      "model": "MiniCPM-o 4.5",
+      "runtime": "Official quantized llama.cpp-omni",
+      "maintainer": "official",
+      "architecture": "native-full-duplex",
+      "interaction": {
+        "text": "Full-duplex omni streaming, with a separate half-duplex speech mode.",
+        "provenance": "published",
+        "sources": [
+          "minicpm"
+        ]
+      },
+      "persona": {
+        "text": "Prompt and reference-audio controls are documented in the model's demo.",
+        "provenance": "published",
+        "sources": [
+          "minicpm"
+        ]
+      },
+      "tools": {
+        "status": "not-established",
+        "evidence": {
+          "text": "No verified persistent coding-harness integration in this runtime.",
+          "provenance": "unknown",
+          "sources": []
+        }
+      },
+      "languages": {
+        "text": "English/Chinese; speech can mix the two languages.",
+        "provenance": "published",
+        "sources": [
+          "minicpm"
+        ]
+      },
+      "caveat": {
+        "text": "Quantized edge runtime. Published hardware thresholds do not prove quality or latency on the selected device.",
+        "provenance": "inference",
+        "sources": [
+          "minicpm"
+        ]
+      },
+      "metrics": [
+        {
+          "label": "CUDA requirement",
+          "value": 12,
+          "unit": "GB",
+          "quantity": "runtime-requirement",
+          "provenance": "published",
+          "hardware": "NVIDIA GPU",
+          "conditions": "Published full-duplex threshold; quantized C++ runtime.",
+          "sources": [
+            "minicpm"
+          ]
+        },
+        {
+          "label": "Apple full-duplex requirement",
+          "value": 24,
+          "unit": "GB",
+          "quantity": "runtime-requirement",
+          "provenance": "published",
+          "hardware": "Apple M4 Max",
+          "conditions": "Published RAM threshold for full-duplex omni.",
+          "sources": [
+            "minicpm"
+          ]
+        },
+        {
+          "label": "Local peak memory",
+          "value": null,
+          "unit": "GB",
+          "quantity": "peak-memory",
+          "provenance": "unknown",
+          "hardware": "Selected machine",
+          "conditions": "No local voice run or peak-memory receipt is recorded.",
+          "sources": []
+        }
+      ],
+      "fits": {
+        "a6000-48": {
+          "status": "candidate",
+          "provenance": "inference",
+          "note": "48 GiB exceeds the published 12 GB CUDA threshold; runtime untested here.",
+          "sources": [
+            "minicpm"
+          ]
+        },
+        "4070ti-super-16": {
+          "status": "candidate",
+          "provenance": "inference",
+          "note": "16 GiB exceeds the published 12 GB CUDA threshold; runtime untested here.",
+          "sources": [
+            "minicpm"
+          ]
+        },
+        "m4-max-64": {
+          "status": "candidate",
+          "provenance": "inference",
+          "note": "M4 Max 64 GiB exceeds the published M4 Max 24 GB threshold; untested here.",
+          "sources": [
+            "minicpm"
+          ]
+        }
+      }
+    },
+    {
+      "id": "minicpm-pytorch",
+      "model": "MiniCPM-o 4.5",
+      "runtime": "Official PyTorch web demo",
+      "maintainer": "official",
+      "architecture": "native-full-duplex",
+      "interaction": {
+        "text": "Full-duplex speech and omni streaming, plus turn-based chat.",
+        "provenance": "published",
+        "sources": [
+          "minicpm"
+        ]
+      },
+      "persona": {
+        "text": "Custom system prompts and reference audio.",
+        "provenance": "published",
+        "sources": [
+          "minicpm"
+        ]
+      },
+      "tools": {
+        "status": "not-established",
+        "evidence": {
+          "text": "API backend availability does not establish coding-agent integration.",
+          "provenance": "unknown",
+          "sources": []
+        }
+      },
+      "languages": {
+        "text": "English/Chinese; mixed-language output is a documented limitation.",
+        "provenance": "published",
+        "sources": [
+          "minicpm"
+        ]
+      },
+      "caveat": {
+        "text": "Distinct runtime from the lower-memory C++ build.",
+        "provenance": "inference",
+        "sources": [
+          "minicpm"
+        ]
+      },
+      "metrics": [
+        {
+          "label": "Demo requirement",
+          "value": 28,
+          "unit": "GB",
+          "quantity": "runtime-requirement",
+          "provenance": "published",
+          "hardware": "NVIDIA GPU",
+          "conditions": "PyTorch demo requirement, not a measured peak.",
+          "sources": [
+            "minicpm"
+          ]
+        },
+        {
+          "label": "Local peak memory",
+          "value": null,
+          "unit": "GB",
+          "quantity": "peak-memory",
+          "provenance": "unknown",
+          "hardware": "Selected machine",
+          "conditions": "No local voice run or peak-memory receipt is recorded.",
+          "sources": []
+        }
+      ],
+      "fits": {
+        "a6000-48": {
+          "status": "candidate",
+          "provenance": "inference",
+          "note": "A6000 capacity exceeds the stated 28 GB threshold; untested.",
+          "sources": [
+            "minicpm"
+          ]
+        },
+        "4070ti-super-16": {
+          "status": "over-budget",
+          "provenance": "inference",
+          "note": "16 GiB is below the published 28 GB requirement.",
+          "sources": [
+            "minicpm"
+          ]
+        },
+        "m4-max-64": {
+          "status": "not-supported",
+          "provenance": "inference",
+          "note": "This published demo requires NVIDIA; use the separate C++ row.",
+          "sources": [
+            "minicpm"
+          ]
+        }
+      }
+    },
+    {
+      "id": "voicechat-official",
+      "model": "NemotronLabs VoiceChat 11B",
+      "runtime": "Official experimental NeMo / NVIDIA runtime",
+      "maintainer": "official",
+      "architecture": "native-full-duplex",
+      "interaction": {
+        "text": "Native full-duplex speech with a separate function-call channel.",
+        "provenance": "published",
+        "sources": [
+          "voicechat-card"
+        ]
+      },
+      "persona": {
+        "text": "One fixed voice; no voice cloning.",
+        "provenance": "published",
+        "sources": [
+          "voicechat"
+        ]
+      },
+      "tools": {
+        "status": "structured",
+        "evidence": {
+          "text": "Structured tool calls, but no interruption during tool execution; at most five tools recommended.",
+          "provenance": "published",
+          "sources": [
+            "voicechat-card",
+            "voicechat"
+          ]
+        }
+      },
+      "languages": {
+        "text": "English speech model.",
+        "provenance": "published",
+        "sources": [
+          "voicechat-card"
+        ]
+      },
+      "caveat": {
+        "text": "Research candidate: short context, repeated-loop risks, and no established Codex/Claude session integration. Do not transfer scores from Nemotron 3 VoiceChat 12B.",
+        "provenance": "inference",
+        "sources": [
+          "voicechat-card"
+        ]
+      },
+      "metrics": [
+        {
+          "label": "Official GPU requirement",
+          "value": 80,
+          "unit": "GB",
+          "quantity": "runtime-requirement",
+          "provenance": "published",
+          "hardware": "NVIDIA GPU",
+          "conditions": "Official README threshold; 11B parameter count is not a runtime-memory measurement.",
+          "sources": [
+            "voicechat"
+          ]
+        },
+        {
+          "label": "Local peak memory",
+          "value": null,
+          "unit": "GB",
+          "quantity": "peak-memory",
+          "provenance": "unknown",
+          "hardware": "Selected machine",
+          "conditions": "No local voice run or peak-memory receipt is recorded.",
+          "sources": []
+        }
+      ],
+      "fits": {
+        "a6000-48": {
+          "status": "over-budget",
+          "provenance": "inference",
+          "note": "48 GiB is below the stated 80 GB requirement. Separate GPUs do not become one device.",
+          "sources": [
+            "voicechat"
+          ]
+        },
+        "4070ti-super-16": {
+          "status": "over-budget",
+          "provenance": "inference",
+          "note": "16 GiB is below the stated 80 GB requirement.",
+          "sources": [
+            "voicechat"
+          ]
+        },
+        "m4-max-64": {
+          "status": "not-supported",
+          "provenance": "inference",
+          "note": "Official path requires NVIDIA; community MLX is a different runtime below.",
+          "sources": [
+            "voicechat"
+          ]
+        }
+      }
+    },
+    {
+      "id": "voicechat-mlx",
+      "model": "NemotronLabs VoiceChat 11B",
+      "runtime": "Community MLX Swift INT5 port",
+      "maintainer": "community",
+      "architecture": "native-full-duplex",
+      "interaction": {
+        "text": "Port implements duplex audio and text/function channels.",
+        "provenance": "published",
+        "sources": [
+          "voicechat-mlx"
+        ]
+      },
+      "persona": {
+        "text": "Fixed upstream voice.",
+        "provenance": "published",
+        "sources": [
+          "voicechat"
+        ]
+      },
+      "tools": {
+        "status": "structured",
+        "evidence": {
+          "text": "Function-channel support is documented; this is not a Codex or Claude Code bridge.",
+          "provenance": "published",
+          "sources": [
+            "voicechat-mlx"
+          ]
+        }
+      },
+      "languages": {
+        "text": "English; inherits upstream model limitations.",
+        "provenance": "published",
+        "sources": [
+          "voicechat-card"
+        ]
+      },
+      "caveat": {
+        "text": "Near real-time publisher tests are on M5 Pro, not this M4 Max. Longer sessions increase memory; benchmark duration and compaction matter.",
+        "provenance": "inference",
+        "sources": [
+          "voicechat-mlx"
+        ]
+      },
+      "metrics": [
+        {
+          "label": "Complete INT5 bundle",
+          "value": 8.56,
+          "unit": "GB",
+          "quantity": "download",
+          "provenance": "published",
+          "hardware": "Apple Silicon",
+          "conditions": "On-disk bundle; not runtime RAM.",
+          "sources": [
+            "voicechat-mlx"
+          ]
+        },
+        {
+          "label": "Published short-run peak",
+          "value": 15.66,
+          "unit": "GB",
+          "quantity": "peak-memory",
+          "provenance": "published",
+          "hardware": "M5 Pro, 48 GB",
+          "conditions": "9.6-second fixture, peak physical memory; publisher test on another machine.",
+          "sources": [
+            "voicechat-mlx"
+          ]
+        },
+        {
+          "label": "Published longer-run peak",
+          "value": 23.67,
+          "unit": "GB",
+          "quantity": "peak-memory",
+          "provenance": "published",
+          "hardware": "M5 Pro, 48 GB",
+          "conditions": "63.6-second fixture with content-safe tail / compaction enabled; not the default Swift API or a multi-hour soak test.",
+          "sources": [
+            "voicechat-mlx"
+          ]
+        },
+        {
+          "label": "Published short-run RTF",
+          "value": 0.94,
+          "unit": "RTF",
+          "quantity": "throughput",
+          "provenance": "published",
+          "hardware": "M5 Pro, 48 GB",
+          "conditions": "One documented short-run profile; RTF below 1 is faster than real time. No latency equivalence across tests.",
+          "sources": [
+            "voicechat-mlx"
+          ]
+        },
+        {
+          "label": "Local peak memory",
+          "value": null,
+          "unit": "GB",
+          "quantity": "peak-memory",
+          "provenance": "unknown",
+          "hardware": "Selected machine",
+          "conditions": "No local voice run or peak-memory receipt is recorded.",
+          "sources": []
+        }
+      ],
+      "fits": {
+        "a6000-48": {
+          "status": "not-supported",
+          "provenance": "inference",
+          "note": "This port targets Apple MLX, not CUDA.",
+          "sources": [
+            "voicechat-mlx"
+          ]
+        },
+        "4070ti-super-16": {
+          "status": "not-supported",
+          "provenance": "inference",
+          "note": "This port targets Apple MLX, not CUDA.",
+          "sources": [
+            "voicechat-mlx"
+          ]
+        },
+        "m4-max-64": {
+          "status": "conditional",
+          "provenance": "inference",
+          "note": "Published M5 Pro memory is within this capacity; M4 Max throughput and long-session stability are unverified.",
+          "sources": [
+            "voicechat-mlx"
+          ]
+        }
+      }
+    },
+    {
+      "id": "speakrail",
+      "model": "Speakrail",
+      "runtime": "Voxtral ASR → Gemma 4 12B + LoRA → Breeze TTS 2",
+      "maintainer": "community",
+      "architecture": "cascade-full-duplex",
+      "interaction": {
+        "text": "Streaming cascade handles interruptions, pauses and backchannels.",
+        "provenance": "published",
+        "sources": [
+          "speakrail"
+        ]
+      },
+      "persona": {
+        "text": "Configurable output voice and assistant settings.",
+        "provenance": "published",
+        "sources": [
+          "speakrail"
+        ]
+      },
+      "tools": {
+        "status": "external-tools",
+        "evidence": {
+          "text": "Includes assistant tools and optional larger-model delegation; a persistent coding-harness bridge is not established.",
+          "provenance": "published",
+          "sources": [
+            "speakrail"
+          ]
+        }
+      },
+      "languages": {
+        "text": "English is this review's target; local English evaluation not run.",
+        "provenance": "unknown",
+        "sources": []
+      },
+      "caveat": {
+        "text": "Developer-tested on RTX 4090. A6000 compatibility and the complete stack's model licenses need checking before installation.",
+        "provenance": "inference",
+        "sources": [
+          "speakrail"
+        ]
+      },
+      "metrics": [
+        {
+          "label": "Published GPU requirement",
+          "value": 24,
+          "unit": "GB",
+          "quantity": "runtime-requirement",
+          "provenance": "published",
+          "hardware": "NVIDIA RTX 4090 tested by developer",
+          "conditions": "Other 24 GB NVIDIA cards expected by developer; Linux and NVIDIA containers required.",
+          "sources": [
+            "speakrail"
+          ]
+        },
+        {
+          "label": "Disk requirement",
+          "value": 75,
+          "unit": "GB",
+          "quantity": "download",
+          "provenance": "published",
+          "hardware": "Host storage",
+          "conditions": "Approximate models plus container images; not VRAM.",
+          "sources": [
+            "speakrail"
+          ]
+        },
+        {
+          "label": "Local peak memory",
+          "value": null,
+          "unit": "GB",
+          "quantity": "peak-memory",
+          "provenance": "unknown",
+          "hardware": "Selected machine",
+          "conditions": "No local voice run or peak-memory receipt is recorded.",
+          "sources": []
+        }
+      ],
+      "fits": {
+        "a6000-48": {
+          "status": "candidate",
+          "provenance": "inference",
+          "note": "A6000 has capacity above the stated 24 GB requirement; this GPU and WSL deployment are not tested here.",
+          "sources": [
+            "speakrail"
+          ]
+        },
+        "4070ti-super-16": {
+          "status": "over-budget",
+          "provenance": "inference",
+          "note": "Below the published single-card 24 GB requirement.",
+          "sources": [
+            "speakrail"
+          ]
+        },
+        "m4-max-64": {
+          "status": "not-supported",
+          "provenance": "inference",
+          "note": "Published stack requires NVIDIA CUDA and Linux.",
+          "sources": [
+            "speakrail"
+          ]
+        }
+      }
+    },
+    {
+      "id": "unmute",
+      "model": "Kyutai Unmute",
+      "runtime": "Streaming STT → configurable text LLM → streaming TTS",
+      "maintainer": "official",
+      "architecture": "cascade-full-duplex",
+      "interaction": {
+        "text": "Speech pipeline with overlapping input/output and configurable text model.",
+        "provenance": "published",
+        "sources": [
+          "unmute"
+        ]
+      },
+      "persona": {
+        "text": "Voice and text-model configuration are separate.",
+        "provenance": "published",
+        "sources": [
+          "unmute"
+        ]
+      },
+      "tools": {
+        "status": "not-supported",
+        "evidence": {
+          "text": "Repository explicitly does not support tool calling yet. A coding-harness adapter would be additional work.",
+          "provenance": "published",
+          "sources": [
+            "unmute"
+          ]
+        }
+      },
+      "languages": {
+        "text": "English supported by the speech pipeline; local evaluation not run.",
+        "provenance": "published",
+        "sources": [
+          "unmute"
+        ]
+      },
+      "caveat": {
+        "text": "Replacing the LLM endpoint does not preserve a Codex or Claude Code agent session by itself.",
+        "provenance": "inference",
+        "sources": [
+          "unmute",
+          "codex-app-server",
+          "claude-headless"
+        ]
+      },
+      "metrics": [
+        {
+          "label": "Default GPU requirement",
+          "value": 16,
+          "unit": "GB",
+          "quantity": "runtime-requirement",
+          "provenance": "published",
+          "hardware": "NVIDIA, x86_64 Linux / WSL",
+          "conditions": "Default Gemma 3 1B setup; selecting a larger LLM changes memory demand.",
+          "sources": [
+            "unmute"
+          ]
+        },
+        {
+          "label": "Local peak memory",
+          "value": null,
+          "unit": "GB",
+          "quantity": "peak-memory",
+          "provenance": "unknown",
+          "hardware": "Selected machine",
+          "conditions": "No local voice run or peak-memory receipt is recorded.",
+          "sources": []
+        }
+      ],
+      "fits": {
+        "a6000-48": {
+          "status": "candidate",
+          "provenance": "inference",
+          "note": "Capacity exceeds the published default threshold; selected LLM changes the budget.",
+          "sources": [
+            "unmute"
+          ]
+        },
+        "4070ti-super-16": {
+          "status": "conditional",
+          "provenance": "inference",
+          "note": "At the nominal 16 GB threshold; actual free VRAM, reserve and runtime overhead need a run.",
+          "sources": [
+            "unmute"
+          ]
+        },
+        "m4-max-64": {
+          "status": "not-supported",
+          "provenance": "inference",
+          "note": "This published deployment targets x86_64 Linux / WSL and CUDA.",
+          "sources": [
+            "unmute"
+          ]
+        }
+      }
+    }
+  ]
+}

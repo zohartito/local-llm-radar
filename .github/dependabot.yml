@@ -1,0 +1,21 @@
+# Standard automation onboarding (PR-Janitor). Keep npm deps + GitHub Actions current.
+# Modeled on tools-dashboard / handoff .github/dependabot.yml.
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    ignore:
+      # TypeScript 7.0 is the Go-native compiler rewrite: it drops @types/node
+      # global resolution under NodeNext (process/console/Buffer/node:* fail with
+      # TS2591/TS2584), and ts-jest@29 pins peer typescript ">=4.3 <7" so npm
+      # can't even install the tree. Mirrors zohartito/handoff#12 (closed #37).
+      # Revisit once ts-jest and @types/* support TS7.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
