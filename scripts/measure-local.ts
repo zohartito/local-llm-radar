@@ -10,7 +10,7 @@
  * recorded; `--machine` is the only label.
  */
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
@@ -252,8 +252,10 @@ async function main() {
   };
   mkdirSync(opts.outDir, { recursive: true });
   const slug = opts.model.toLowerCase().replace(/[^a-z0-9.]+/g, '-').replace(/^-|-$/g, '');
-  const file = path.join(opts.outDir, `${measuredAt.slice(0, 10)}_${opts.machine}_${slug}.json`);
-  writeFileSync(file, JSON.stringify(record, null, 2) + '\n');
+  const runDirectory = mkdtempSync(path.join(opts.outDir, `${measuredAt.replace(/[:.]/g, '-')}_${opts.machine}_${slug}_`));
+  const file = path.join(runDirectory, 'measurement.json');
+  // Exclusive creation refuses existing files and symlinks, including dangling ones.
+  writeFileSync(file, JSON.stringify(record, null, 2) + '\n', { flag: 'wx', mode: 0o600 });
   console.log(`Wrote ${file}`);
 }
 

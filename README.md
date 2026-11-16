@@ -52,6 +52,7 @@ Code is MIT ([`LICENSE`](LICENSE)). Committed third-party results keep their own
 ## Measure a model on your machine
 
 `scripts/measure-local.ts` measures one model served by [Ollama](https://ollama.com) and writes a JSON record with load time, prompt-processing and generation tokens/s, peak memory, quantisation, context and machine specs.
+Each run creates a private, unique directory under `datasets/local-measurements/` (or `--out`) containing `measurement.json`; existing receipts and symlink targets are never overwritten.
 
 ```bash
 ollama pull qwen3:8b       # any model you already have works
