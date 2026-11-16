@@ -10,7 +10,7 @@ Node.js 20.19+ (20.x), 22.13+ (22.x), or 24+ and npm. These minimums include the
 ```bash
 npm ci
 npm run dev        # http://localhost:3000
-npm test           # Jest, offline (synthetic fixtures only)
+npm test           # Jest, offline (synthetic parser fixtures + committed-data invariants)
 npm run lint
 npm run build      # production build; works offline
 ```

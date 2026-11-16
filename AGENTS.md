@@ -43,7 +43,7 @@ only those boards. Everything else is fetched at request time with attribution a
 never committed (no captures, fixtures or audit evidence copied from it). Sources
 whose terms forbid scraping or republishing (Artificial Analysis) are links only.
 `data/curated-models.json` holds roster metadata; its score fields stay null.
-Tests use invented data (`__tests__/fixtures/`).
+Parser tests use invented data (`__tests__/fixtures/`); offline invariant tests also inspect committed roster metadata and licensed snapshots.
 Credits for every source live in `src/lib/source-credits.ts` (rendered at `/sources`
 and in the footer). Public JSON APIs pass through `src/lib/public-api.ts`: scores and
 ZeroEval prices from `withheldInApi` sources become null with source name/URL; facts,
