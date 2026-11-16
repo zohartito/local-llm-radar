@@ -15,6 +15,8 @@ npm run lint
 npm run build      # production build; works offline
 ```
 
+Development serving binds to `127.0.0.1`. To explicitly expose it on a trusted network, use `npm run dev -- --hostname 0.0.0.0`; this also exposes Next's unauthenticated development diagnostics/MCP tools to reachable clients.
+
 What you see depends on configuration:
 
 - **Specialist boards** (embeddings, OCR, vision, audio/video understanding, detection, depth, 3D, rerankers) fetch their sources on request and cache them for an hour. Offline, the boards whose source licence allows redistribution show the committed snapshot in `data/specialist-snapshots.json`; the others show "unavailable".
