@@ -6,6 +6,9 @@ import * as sources from '../src/lib/live-sources';
 import { mergeAllSources, SCORING_VERSION } from '../src/lib/merge-models';
 import { computeHardwareFit, DEFAULT_HARDWARE_PROFILES } from '../src/lib/hardware';
 import { buildCategoryHardwareRecommendations, openWeightModels } from '../src/lib/hardware-ranking';
+import { snapshotExpired } from '../src/lib/trust';
+
+const REQUIRED_SOURCES = ['zeroeval', 'lmarena', 'codearena', 'llmstats_recent', 'livebench2', 'livebench', 'bfcl', 'terminalbench', 'swebench'];
 
 async function main() {
   const argument = (flag: string): string | undefined => {
@@ -35,8 +38,20 @@ async function main() {
   if (!replay) writeFileSync(capturePath, JSON.stringify({ capturedAt: new Date().toISOString(), sources: results }, null, 2));
   const fallback = JSON.parse(readFileSync('data/curated-models.json', 'utf8'));
   const models = mergeAllSources(results, fallback);
+  const usedFallback = Boolean((models as typeof models & { usedFallback: boolean }).usedFallback);
+  const degradedSources = REQUIRED_SOURCES.filter(id => !results.some(source => source.source_id === id && !source.error && source.models.length > 0));
+  const successfulDates = results.filter(source => !source.error && source.models.length > 0)
+    .map(source => source.fetched_at).filter(date => Number.isFinite(Date.parse(date))).sort();
+  const dataDate = usedFallback ? fallback._updated ?? null : successfulDates[0] ?? null;
+  const provenance = {
+    usedFallback, dataDate, updated: dataDate,
+    stale: usedFallback || snapshotExpired(dataDate),
+    dataSourceLabel: usedFallback ? 'fallback' : degradedSources.length ? 'partial' : 'live',
+    degradedSources,
+  };
   const summary = {
     scoringVersion: SCORING_VERSION,
+    ...provenance,
     sources: results.map(({ source_id, models, error, data_date, fetched_at }) => ({ id: source_id, rows: models.length, error, data_date, fetched_at })),
     models: models.length,
     openWeights: models.filter((model) => !model.closed_source).length,
@@ -49,8 +64,9 @@ async function main() {
     qwen: models.filter((model) => /qwen3\.[58]-(27b|35b-a3b)$/i.test(model.llm_stats_model_id ?? model.name)),
   };
   writeFileSync(path.join(directory, 'summary.json'), JSON.stringify(summary, null, 2));
-  writeFileSync(path.join(directory, 'leaderboard.json'), JSON.stringify({ models, sources: results.map((source) => ({ id: source.source_id, name: source.source_name, url: '', count: source.models.length, error: source.error, fetched_at: source.fetched_at, data_date: source.data_date, date_kind: ['livebench2', 'livebench'].includes(source.source_id) ? 'benchmark_edition' : 'publication', historical: source.source_id === 'livebench', duration_ms: 0, status: source.error ? 'error' : source.models.length ? 'ok' : 'degraded' })), scoringVersion: SCORING_VERSION, fallbackCellCount: summary.fallbackCells, updated: results[0]?.fetched_at, dataDate: results[0]?.fetched_at, dataSourceLabel: results.some((source) => source.error || !source.models.length) ? 'partial' : 'live', degradedSources: results.filter((source) => source.error).map((source) => source.source_id), usedFallback: false, stale: false }));
+  writeFileSync(path.join(directory, 'leaderboard.json'), JSON.stringify({ models, sources: results.map((source) => ({ id: source.source_id, name: source.source_name, url: '', count: source.models.length, error: source.error, fetched_at: source.fetched_at, data_date: source.data_date, date_kind: ['livebench2', 'livebench'].includes(source.source_id) ? 'benchmark_edition' : 'publication', historical: source.source_id === 'livebench', duration_ms: 0, status: source.error ? 'error' : source.models.length ? 'ok' : 'degraded' })), scoringVersion: SCORING_VERSION, fallbackCellCount: summary.fallbackCells, ...provenance }));
   console.log(JSON.stringify({ ...summary, qwen: summary.qwen.map((m) => ({ name: m.name, score: m.composite_score, evidence: m.rank_status })) }, null, 2));
+  if (degradedSources.length) process.exitCode = 1;
 }
 
 void main().catch((error) => { console.error(error); process.exitCode = 1; });
