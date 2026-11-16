@@ -51,8 +51,8 @@ For deployment and local integration testing:
 
 ## Keys (prefix `llmr:v2`, tracks `SCORING_VERSION`)
 ```
-llmr:v2:leaderboard:current   { data, freshUntil, staleUntil, scoringVersion }   EX 7d
-llmr:v2:refresh:lock          random token,  SET NX EX 120  (compare-and-delete release)
+llmr:v2:leaderboard:<SCORING_VERSION>:current   { data, freshUntil, staleUntil, scoringVersion }   EX 7d
+llmr:v2:refresh:<SCORING_VERSION>:lock          random token,  SET NX EX 120  (compare-and-delete release)
 llmr:v2:scorecard:<model>     {value}  EX 15m (or 60s negative cache)
 llmr:v2:scorecard-lease:<model> random token, SET NX EX 30 (compare-and-delete release)
 llmr:v2:scorecard-rate:<key>  atomic INCR + EX 60 (12 requests per key/window)
@@ -71,8 +71,8 @@ llmr:v2:snapshot:YYYY-MM-DD   { date, updated, scoringVersion, quality, ranks:{o
   TTL. CDN response TTL is no greater than the 15-minute shared positive-cache TTL.
 - **Cron** (`/api/refresh/cron`, daily): force-refresh only on a lock-winning proven-live
   result, then `writeDailyRankSnapshot()`; fallback/stale/error results are never snapshotted.
-- **Trend** (`/api/rankings`): joins current ranks against the snapshot nearest `today − 7d`
-  (±3-day window so a missed cron day doesn't blank it) and fills `rank_change` /
+- **Trend** (`/api/rankings`): joins current index ranks against the newest valid snapshot 7–10 days old
+  (searching backward only, skipping missing or malformed days) and fills `rank_change` /
   `previous_rank` / `trend_snapshot_date`. Null until ≥1 week of history exists.
 
 ## Cost / footprint

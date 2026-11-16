@@ -43,7 +43,7 @@ sources were changed to make a particular model win.
   `/api/rankings` response share the rule. Memory-fit math and the 10% multi-GPU
   split reserve are unchanged.
 - `/api/rankings?category=math` returns `mode=benchmark`, comparison metadata,
-  raw scores, null scores/positions for unmeasured rows, and no historical delta.
+  ranks computed from raw scores, null scores for licence-withheld sources (including LiveBench), null scores/positions for unmeasured rows, and no historical delta. The JSON response includes source/terms attribution; site pages display values with credit.
   An optional `benchmark` selects an allowed category test; `cohort` selects its
   exact JSON-encoded cohort ID. Invalid selectors return 400.
 - Legacy index clients must request `mode=index`. The existing nightly scheduler
