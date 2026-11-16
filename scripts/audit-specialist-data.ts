@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import { SPECIALIST_BOARDS, type SpecialistSnapshot, type SpecialistRow } from '../src/lib/model-types';
 import { enrichReleaseDate } from '../src/lib/release-evidence';
 import { parseSpecialistSnapshot } from '../src/lib/specialist-parsers';
+import { redactSpecialistRowsForPublicApi } from '../src/lib/public-api';
 
 async function main() {
   const directory = path.resolve(process.argv[2] ?? 'output/live-audit');
@@ -28,7 +29,11 @@ async function main() {
       const parsed = parseSpecialistSnapshot(text, board, new Date().toISOString());
       const live = JSON.parse(readFileSync(path.join(directory, `${board.id}.json`), 'utf8')) as SpecialistSnapshot & { rows: (SpecialistRow & {rank: number|null})[] };
       assert.equal(live.benchmark, board.benchmark, `${board.id}: deployed edition differs`);
-      const byId = new Map(parsed.rows.map(row => [row.id, enrichReleaseDate(board.id, row)]));
+      const ranked = parsed.rows.map(row => ({
+        ...enrichReleaseDate(board.id, row),
+        rank: row.score === null ? null : 1 + parsed.rows.filter(other => other.score !== null && (board.direction === 'asc' ? other.score < row.score! : other.score > row.score!)).length,
+      }));
+      const byId = new Map(redactSpecialistRowsForPublicApi(board, ranked).map(row => [row.id, row]));
       assert.equal(byId.size, parsed.rows.length, `${board.id}: duplicate IDs`);
       const diffs: {id:string;field:string;live:unknown;source:unknown}[] = [];
       for (const row of parsed.rows) {
@@ -45,8 +50,7 @@ async function main() {
         }
       }
       for (const row of live.rows) {
-        const expected = row.score === null ? null : 1 + live.rows.filter(other => other.score !== null && (board.direction === 'asc' ? other.score < row.score! : other.score > row.score!)).length;
-        assert.equal(row.rank, expected, `${board.id}/${row.id}: rank`);
+        if (byId.has(row.id)) assert.equal(row.rank, byId.get(row.id)!.rank, `${board.id}/${row.id}: rank`);
       }
       // Independent comparison of normalized MTEB numbers against raw JSON.
       let rawScoreCells = 0;

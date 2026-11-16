@@ -1,17 +1,33 @@
 /** Offline verification of a public audit:live capture; never contacts Redis. */
 import assert from 'node:assert/strict';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import { BENCH_ANCHORS, COMPOSITE_WEIGHTS, SCORING_CATEGORIES, mergeAllSources, type MergedModel } from '../src/lib/merge-models';
+import { gunzipSync } from 'node:zlib';
+import { BENCH_ANCHORS, COMPOSITE_WEIGHTS, SCORING_CATEGORIES, SCORING_VERSION, mergeAllSources, type MergedModel } from '../src/lib/merge-models';
 import { buildCategoryRankings, CATEGORY_DEFINITIONS, computeLeaderboardCategoryScore } from '../src/lib/leaderboard';
 import type { SourceResult } from '../src/lib/live-sources';
+import { redactModelForPublicApi } from '../src/lib/public-api';
 
 const directory = path.resolve(process.argv[2] ?? 'output/trust-audit');
-const read = (name: string) => JSON.parse(readFileSync(path.join(directory, name), 'utf8'));
-const sources = read('sources.json').sources as SourceResult[];
-const before = read('production.json').models as MergedModel[];
+const read = (name: string) => {
+  const bytes = readFileSync(path.resolve(directory, name));
+  return JSON.parse((name.endsWith('.gz') ? gunzipSync(bytes) : bytes).toString('utf8'));
+};
+const manifest = read('manifest.json');
+assert.equal(manifest.schema, 'local-llm-radar/ranking-audit@1', 'Unsupported capture schema; run audit:live or audit:replay');
+assert.equal(manifest.scoringVersion, SCORING_VERSION, 'Capture uses another scoring version; run audit:replay');
+const sources = read(manifest.files.sources).sources as SourceResult[];
+const before = read(manifest.files.leaderboard).models as MergedModel[];
 const models = mergeAllSources(sources, JSON.parse(readFileSync('data/curated-models.json', 'utf8')));
 const oldBySlug = new Map(before.map(model => [model.slug, model]));
+const publicSnapshot = existsSync(path.join(directory, 'production.json')) ? read('production.json').models as MergedModel[] : null;
+if (publicSnapshot) {
+  const publicBySlug = new Map(publicSnapshot.map(model => [model.slug, model]));
+  assert.equal(publicBySlug.size, models.length, 'Public API roster differs from capture');
+  for (const model of models) {
+    assert.deepEqual(publicBySlug.get(model.slug)?.benchmarks, redactModelForPublicApi(model).benchmarks, `${model.slug}: public API values differ`);
+  }
+}
 
 // Recalculate from documented arithmetic without calling the production scorer.
 function category(model: MergedModel, keys: readonly string[]) {
@@ -80,28 +96,31 @@ for (const model of models) {
 
 // Independently reconstruct imported LiveBench cells from the evaluator's raw
 // CSV and category map, rather than trusting our source adapter's calculations.
-const lines = readFileSync(path.join(directory, 'livebench.csv'), 'utf8').trim().split(/\r?\n/);
-const headers = lines.shift()!.split(',');
-const rawRows = new Map(lines.map(line => {
-  const cells = line.split(',');
-  return [cells[0], Object.fromEntries(headers.slice(1).map((key, index) => [key, Number.parseFloat(cells[index + 1])]))];
-}));
-const categories = read('categories.json') as Record<string, string[]>;
+const hasLiveBench = models.some(model => model.benchmark_sources.livebench_global?.some(row => row.selected && row.source_id === 'livebench'));
 let livebenchCells = 0;
-for (const model of models) {
-  if (!model.benchmark_sources.livebench_global?.some(row => row.selected && row.source_id === 'livebench')) continue;
-  const raw = rawRows.get(model.effort_variants[0]?.variant_name);
-  assert(raw, `${model.slug}: selected raw LiveBench run absent`);
-  const scores = Object.fromEntries(Object.entries(categories).map(([key, tasks]) => {
-    const values = tasks.map(task => raw[task]).filter(Number.isFinite);
-    assert(values.length);
-    return [`livebench_${key.toLowerCase().replace(/\s+/g, '_')}`, Math.round(values.reduce((a, b) => a + b, 0) / values.length * 100) / 100];
+if (hasLiveBench) {
+  const lines = readFileSync(path.resolve(directory, manifest.files.livebench), 'utf8').trim().split(/\r?\n/);
+  const headers = lines.shift()!.split(',');
+  const rawRows = new Map(lines.map(line => {
+    const cells = line.split(',');
+    return [cells[0], Object.fromEntries(headers.slice(1).map((key, index) => [key, Number.parseFloat(cells[index + 1])]))];
   }));
-  const values = Object.values(scores);
-  scores.livebench_global = Math.round(values.reduce((a, b) => a + b, 0) / values.length * 100) / 100;
-  for (const [key, value] of Object.entries(scores)) {
-    assert.equal(model.benchmarks[key], value, `${model.slug}/${key}`);
-    livebenchCells++;
+  const categories = read(manifest.files.categories) as Record<string, string[]>;
+  for (const model of models) {
+    if (!model.benchmark_sources.livebench_global?.some(row => row.selected && row.source_id === 'livebench')) continue;
+    const raw = rawRows.get(model.effort_variants[0]?.variant_name);
+    assert(raw, `${model.slug}: selected raw LiveBench run absent`);
+    const scores = Object.fromEntries(Object.entries(categories).map(([key, tasks]) => {
+      const values = tasks.map(task => raw[task]).filter(Number.isFinite);
+      assert(values.length);
+      return [`livebench_${key.toLowerCase().replace(/\s+/g, '_')}`, Math.round(values.reduce((a, b) => a + b, 0) / values.length * 100) / 100];
+    }));
+    const values = Object.values(scores);
+    scores.livebench_global = Math.round(values.reduce((a, b) => a + b, 0) / values.length * 100) / 100;
+    for (const [key, value] of Object.entries(scores)) {
+      assert.equal(model.benchmarks[key], value, `${model.slug}/${key}`);
+      livebenchCells++;
+    }
   }
 }
 
@@ -109,6 +128,7 @@ const highlight = (model: MergedModel) => ({ name: model.name, score: model.comp
 const names = ['Claude Opus 4.6', 'Claude Opus 5.5', 'Kimi K3'];
 const receipt = {
   checkedAt: new Date().toISOString(), models: models.length, retainedCells, removedArchivedCells, categoryChecks, livebenchCells, tracedReleaseDates,
+  publicSnapshotChecked: publicSnapshot !== null, livebenchChecked: hasLiveBench,
   before: before.filter(model => names.includes(model.name)).map(highlight),
   after: models.filter(model => names.includes(model.name)).map(highlight),
   indices: Object.fromEntries(CATEGORY_DEFINITIONS.map(category => [category.key, buildCategoryRankings(models, category.key).slice(0, 5).map(row => ({ name: row.name, index: row.score, evidence: row.rank_status }))])),

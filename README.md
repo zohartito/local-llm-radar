@@ -5,15 +5,17 @@ It aggregates other people's evaluations: it does not run text benchmarks or cer
 
 ## Run locally
 
-Node.js 20.9+ and npm.
+Node.js 20.19+ (20.x), 22.13+ (22.x), or 24+ and npm. These minimums include the locked lint tooling.
 
 ```bash
 npm ci
 npm run dev        # http://localhost:3000
-npm test           # Jest, offline (synthetic fixtures only)
+npm test           # Jest, offline (synthetic parser fixtures + committed-data invariants)
 npm run lint
 npm run build      # production build; works offline
 ```
+
+Development serving binds to `127.0.0.1`. To explicitly expose it on a trusted network, use `npm run dev -- --hostname 0.0.0.0`; this also exposes Next's unauthenticated development diagnostics/MCP tools to reachable clients.
 
 What you see depends on configuration:
 
@@ -52,6 +54,7 @@ Code is MIT ([`LICENSE`](LICENSE)). Committed third-party results keep their own
 ## Measure a model on your machine
 
 `scripts/measure-local.ts` measures one model served by [Ollama](https://ollama.com) and writes a JSON record with load time, prompt-processing and generation tokens/s, peak memory, quantisation, context and machine specs.
+Each run creates a private, unique directory under `datasets/local-measurements/` (or `--out`) containing `measurement.json`; existing receipts and symlink targets are never overwritten.
 
 ```bash
 ollama pull qwen3:8b       # any model you already have works

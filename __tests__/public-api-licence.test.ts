@@ -8,6 +8,7 @@ import { getLeaderboardData } from '../src/lib/leaderboard-service';
 import { getSpecialistData } from '../src/lib/specialist-service';
 import { SPECIALIST_BOARDS } from '../src/lib/model-types';
 import { SOURCE_CREDITS, isWithheldBoardSource, isWithheldSourceId } from '../src/lib/source-credits';
+import { redactSpecialistRowsForPublicApi } from '../src/lib/public-api';
 
 jest.mock('../src/lib/leaderboard-service', () => ({ getLeaderboardData: jest.fn() }));
 jest.mock('../src/lib/specialist-service', () => ({ getSpecialistData: jest.fn() }));
@@ -85,11 +86,22 @@ function specialistSnapshot(boardId: string) {
   return {
     boardId, benchmark: 'example', checkedAt: '2026-11-14T09:00:00Z', sourceUpdatedAt: null, status: 'source', stale: false,
     rows: [
-      { id: 'a', name: 'Model A', provider: 'Example', url: null, score: 81.25, openWeights: true, benchmarks: { part: 79.5 }, details: { Size: '7B', Votes: 1200 }, interval: [80, 82] },
+      { id: 'a', name: 'Model A', provider: 'Example', url: null, score: 81.25, openWeights: true, benchmarks: { part: 79.5 }, details: { Size: '7B', Votes: 1200 }, interval: [80, 82] as [number, number] },
       { id: 'b', name: 'Model B', provider: 'Example', url: null, score: 61.75, openWeights: false, details: {} },
     ],
   };
 }
+
+test('RAD-08: specialist redaction keeps allowed facts and withholds score-bearing details', () => {
+  const board = SPECIALIST_BOARDS.find(board => board.id === 'vision')!;
+  const row = specialistSnapshot('vision').rows[0];
+  const input = { ...row, details: { Size: '8B', 'Reported date': '2026-01-01', 'Source license label': 'Open source', 'nDCG@10': 0.8, Price: 2, Votes: 100, Unknown: 93 } };
+  const [redacted] = redactSpecialistRowsForPublicApi(board, [input]);
+  expect(redacted.details).toEqual({ Size: '8B', 'Reported date': '2026-01-01', 'Source license label': 'Open source' });
+  expect(redacted.score).toBeNull();
+  expect(redacted.interval).toBeUndefined();
+  expect(input.details['nDCG@10']).toBe(0.8);
+});
 
 test('/api/leaderboards for an unlicensed board returns ranks with null values and source info', async () => {
   jest.mocked(getSpecialistData).mockResolvedValue(specialistSnapshot('audio-understanding') as never);
@@ -97,7 +109,7 @@ test('/api/leaderboards for an unlicensed board returns ranks with null values a
   const body = await response.json();
   expect(body.rows.map((row: { name: string; rank: number; score: null }) => [row.name, row.rank, row.score])).toEqual([['Model A', 1, null], ['Model B', 2, null]]);
   expect(body.rows[0].benchmarks).toEqual({ part: null });
-  expect(body.rows[0].details).toEqual({});
+  expect(body.rows[0].details).toEqual({ Size: '7B' });
   expect(body.dataLicence).toMatchObject({ source: 'MMAU', valuesWithheld: true });
   expect(body.dataLicence.sourceUrl).toContain('sakshi113.github.io');
   expect(JSON.stringify(body)).not.toContain('81.25');

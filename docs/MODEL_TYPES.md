@@ -4,13 +4,13 @@
 
 The homepage retains the existing dashboard, navigation, benchmark table, and
 visual style. `ModelTypeButtons` adds a compact shared row for Text / LLMs,
-Embeddings, Rerankers, Vision & documents, Images, Video, Speech, Music, 3D,
-and More. Related boards are one smaller button row away. `model-navigation.ts`
+Embeddings, Rerankers, OCR, Vision, Detection, Segmentation, Depth, Video,
+Audio & speech, 3D, and More. Related boards are one smaller button row away. `model-navigation.ts`
 owns these links; it does not calculate scores.
 
 `/leaderboards` and `/text` redirect to `/`. Old task-card URLs redirect to the
 relevant board. The task-card directory and chooser pages were removed at the
-user's request. All 19 specialist boards retain their URLs and JSON APIs;
+user's request. All 23 integrated specialist boards have URLs and JSON APIs;
 external boards are available under `/leaderboards/more`.
 
 `/embeddings` brings all seven embedding suites into one explorer. The “Multimodal / mixed input” view joins identical model/experiment IDs across suites, shows accepted
@@ -31,11 +31,9 @@ All specialist boards use a dense benchmark matrix with model specs, the primary
 score, and source component metrics in separate sortable columns. MTEB group
 scores and the other embedding suites are visible together; “Individual tests”
 adds the selected suite's task columns. Rerankers show Elo, nDCG@10, latency,
-and price; speech recognition shows the three WER components; document parsing
+and price; audio understanding shows sound, music and speech accuracy; document parsing
 shows text, formula, table (TEDS and TEDS-S), and reading-order results. MMMU-Pro
-Vision and Standard stay separate from original MMMU validation/test. Arena
-boards show Elo, confidence interval, votes, and available pricing, without
-inventing additional quality benchmarks.
+Vision and Standard stay separate from original MMMU validation/test. 3D Arena shows render-preference Elo, confidence intervals and votes. Artificial Analysis media arenas and ASR are external links, not integrated tables.
 
 `specialist-columns.ts` owns column labels, units, ordering, and sorting. Missing
 values stay last in either direction, including lower-is-better metrics.
@@ -80,7 +78,7 @@ modalities. A model can belong to several tasks; it does not get a universal sco
 
 | Family | Board / source | Comparison boundary |
 | --- | --- | --- |
-| Text generation | Existing six category rankings | Existing v5-identity method |
+| Text generation | Six same-test category rankings | One named evaluator test and edition per comparison |
 | Text embeddings | MTEB multilingual v2 and English v2 | Separate task suites; complete mean only |
 | Code embeddings | MTEB Code v1 | Code retrieval, not code generation |
 | Image/text embeddings | MIEB Multilingual | Joint image/text representation |
@@ -120,7 +118,7 @@ modalities. A model can belong to several tasks; it does not get a universal sco
   `unstable_cache` (this app has not enabled Cache Components). Cache entries are
   keyed by the full board configuration; bump the explicit cache version when
   parser semantics change. Incompatible cached editions are rejected. Failures are
-  caught outside the cached function and serve `data/specialist-snapshots.json`.
+  caught outside the cached function and serve an edition-matched entry from `data/specialist-snapshots.json` when licensed; boards without a saved fallback return unavailable.
   Successful-check time is stored with the observation, never regenerated for a
   cache hit or fallback. Publication/evaluation dates remain separate and unknown
   unless actually supplied by the source. Old cache entries are labeled in UI.
@@ -128,24 +126,47 @@ modalities. A model can belong to several tasks; it does not get a universal sco
   no results return 503. It returns source, status, timestamps, units and ranks.
   Vision uses the benchmark's own JSON feed because the text merge does not
   retain MMMU observations; its API and fallback follow the same contract.
-- `npm run capture:specialists` replaces the fallback file only if every board
-  succeeds. This is a manual maintenance tool, not a second scheduler. Specialist
+- `npm run capture:specialists` selects only boards with `snapshotLicence` and replaces the fallback file only if every selected board succeeds. This is a manual maintenance tool, not a second scheduler. Specialist
   sources update when requested; the existing daily text cron is untouched.
 
 ## Further specialist domains
 
 The More page links out to the evaluator-owned VoiceBench (voice assistants,
-omni and full-duplex), MMAU (audio understanding), GIFT-Eval (forecasting), and
-AllenAI VLA evaluation harness (robotics) leaderboards. These are explicitly
-external; their scores are not imported into Radar. Sound effects, object
-detection, segmentation, and scientific models remain gaps. These domains
+omni and full-duplex), GIFT-Eval (forecasting), and AllenAI VLA evaluation harness (robotics) leaderboards. These are explicitly
+external; their scores are not imported into Radar. MMAU full/mini, detection, segmentation and depth are integrated with separate test scopes (see `model-type-coverage.md`). Sound generation, ASR, speech enhancement, image restoration and scientific models remain gaps. These domains
 require additional evaluator adapters before Radar can claim integrated coverage.
 Do not substitute a nearby modality or show invented rankings for them. General
 boards above are not proxies for those capabilities. Add an edition-pinned source
-and parser, a dated fallback, a methodology note, and comparable multi-vendor rows
+and parser, a methodology note, comparable multi-vendor rows, and a dated fallback only where redistribution is permitted
 before advertising another integrated board.
 
 ## Validation
+
+For source/API reconciliation, first capture each public API response into
+`<board-id>.json` in an ignored directory. For example, with the local server running:
+
+```bash
+AUDIT_SITE=http://127.0.0.1:3000 npx tsx -e '
+import { mkdirSync, writeFileSync } from "node:fs";
+import { SPECIALIST_BOARDS } from "./src/lib/model-types";
+async function capture() {
+  mkdirSync("output/live-audit", { recursive: true });
+  for (const board of SPECIALIST_BOARDS) {
+    const response = await fetch(`${process.env.AUDIT_SITE}/api/leaderboards/${board.id}`);
+    if (!response.ok) throw new Error(`${board.id}: HTTP ${response.status}`);
+    writeFileSync(`output/live-audit/${board.id}.json`, await response.text());
+  }
+}
+void capture().catch(error => { console.error(error); process.exitCode = 1; });'
+npx tsx scripts/audit-specialist-data.ts output/live-audit
+npx tsx scripts/audit-specialist-data.ts output/live-audit --replay
+```
+
+The first audit fetches each registry `dataUrl` into `<board-id>.raw`; replay reads
+those saved inputs without network access. Ranks are checked against raw source
+values, while public fields are compared with licence-redacted expectations.
+Missing inputs, source drift and field/rank differences fail the audit; preserve
+the receipts and investigate before recapturing. Never commit these captures.
 
 `__tests__/specialist-presentation.test.ts` verifies selected-metric ranking, unchanged primary scores, ties/nulls/zero, reversed error-metric colors, and source coverage.
 
@@ -154,8 +175,7 @@ before advertising another integrated board.
 `__tests__/embedding-catalog.test.ts` verifies capability filters, exact-identity joins, score isolation, unknown inputs, experiment variants, and EmbeddingGemma 2 discovery.
 
 `__tests__/specialist-boards.test.ts` covers rank direction/ties/nulls, partial MTEB
-coverage, experiment IDs, exact benchmark editions, arena category isolation,
-ASR host identity, OCR table scope, access uncertainty, source URL validation, and
+coverage, experiment IDs, exact benchmark editions, OCR table scope, access uncertainty, source URL validation, and
 coverage/identity invariants for all saved snapshots. Run lint, Jest, production
 build, workflow tombstones, then desktop/mobile interaction and API checks.
 
@@ -172,7 +192,6 @@ dates render in UTC. Released sorts newest/oldest with unknown dates last; it do
 not become a quality metric. Video fit records support optional model `release`
 metadata separately from measurement/build dates.
 
-The specialist parser cache is `specialist-boards-v6-release`. The 2026-10-26 UTC
-capture has 1,755 dated observations out of 1,911 (models can occur in multiple
+The specialist parser cache is `specialist-boards-v9-vision-releases`. The historical 2026-10-26 UTC capture had 1,755 dated observations out of 1,911 (models can occur in multiple
 suites). Tests cover calendar validation, date precision, timezone stability,
 missing-last sorting and preservation of source model dates.
