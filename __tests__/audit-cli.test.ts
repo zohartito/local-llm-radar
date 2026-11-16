@@ -2,9 +2,11 @@ import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import fixture from './fixtures/synthetic-sources.json';
+import type { MergedModel } from '../src/lib/merge-models';
+import { fetchLiveBenchScores } from '../src/lib/live-sources';
 import { SPECIALIST_BOARDS, rankSpecialistRows } from '../src/lib/model-types';
 import { parseSpecialistSnapshot } from '../src/lib/specialist-parsers';
-import { redactSpecialistRowsForPublicApi } from '../src/lib/public-api';
+import { redactModelForPublicApi, redactSpecialistRowsForPublicApi } from '../src/lib/public-api';
 
 const root = path.join(process.cwd(), '.next', 'audit-tests');
 mkdirSync(root, { recursive: true });
@@ -55,4 +57,51 @@ test('RAD-05: specialist replay checks redacted fields and ranks from raw values
   writeFileSync(path.join(out, 'vision.json'), JSON.stringify(live));
   run(['scripts/audit-specialist-data.ts', out, '--replay']);
   expect(receipt().error).toContain('rank');
+});
+
+test('RAD-06: ranking audit accepts the capture bundle and optional redacted API snapshot', () => {
+  const out = directory();
+  writeFileSync(path.join(out, 'sources.json'), JSON.stringify(fixture));
+  run(['scripts/audit-live-data.ts', '--out', out, '--replay']);
+  const result = run(['scripts/audit-ranking-claims.ts', out]);
+  expect(result.stderr).toBe('');
+  expect(result.status).toBe(0);
+  const saved = read(out, 'leaderboard.json');
+  writeFileSync(path.join(out, 'production.json'), JSON.stringify({ ...saved, models: saved.models.map((model: MergedModel) => redactModelForPublicApi(model)) }));
+  expect(run(['scripts/audit-ranking-claims.ts', out]).status).toBe(0);
+  saved.models.find((model: { name: string }) => model.name === 'Example Coder 32B').benchmarks.swe_bench = 99;
+  writeFileSync(path.join(out, 'leaderboard.json'), JSON.stringify(saved));
+  expect(run(['scripts/audit-ranking-claims.ts', out]).status).toBe(1);
+});
+
+test('RAD-06: exact LiveBench inputs are captured and independently checked', async () => {
+  const out = directory();
+  const csv = 'model,task_a,task_b\nExample Coder 32B,60,80\n';
+  const categories = { Coding: ['task_a'], Reasoning: ['task_b'] };
+  const fetchMock = jest.spyOn(global, 'fetch').mockImplementation(async input => {
+    const url = String(input);
+    if (url === 'https://livebench.ai/') return new Response('<script defer="defer" src="./static/js/main.audit.js"></script>');
+    if (url.endsWith('main.audit.js')) return new Response('const v=["2026-06-25"];');
+    if (url.endsWith('table_2026_06_25.csv')) return new Response(csv);
+    if (url.endsWith('categories_2026_06_25.json')) return Response.json(categories);
+    return new Response('', { status: 404 });
+  });
+  try {
+    const captureLiveBench = jest.fn((raw, groups) => {
+      writeFileSync(path.join(out, 'livebench.csv'), raw);
+      writeFileSync(path.join(out, 'categories.json'), JSON.stringify(groups));
+    });
+    const source = await fetchLiveBenchScores({ captureLiveBench });
+    expect(captureLiveBench).toHaveBeenCalledWith(csv, categories);
+    writeFileSync(path.join(out, 'sources.json'), JSON.stringify({ sources: [...fixture.sources, source] }));
+    run(['scripts/audit-live-data.ts', '--out', out, '--replay']);
+    const result = run(['scripts/audit-ranking-claims.ts', out]);
+    expect(result.stderr).toBe('');
+    expect(result.status).toBe(0);
+    expect(read(out, 'claims-verification.json').livebenchCells).toBe(3);
+    writeFileSync(path.join(out, 'livebench.csv'), csv.replace(',60,80', ',20,80'));
+    expect(run(['scripts/audit-ranking-claims.ts', out]).status).toBe(1);
+  } finally {
+    fetchMock.mockRestore();
+  }
 });

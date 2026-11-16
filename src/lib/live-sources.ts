@@ -52,6 +52,8 @@ export interface SourceResult {
 
 export interface FetchSourceOptions {
   signal?: AbortSignal;
+  /** Audit-only receipt of the exact legacy LiveBench inputs used by this fetch. */
+  captureLiveBench?: (csv: string, categories: Record<string, string[]>) => void;
 }
 
 interface DatasetRowsResponse<T> {
@@ -629,6 +631,7 @@ export async function fetchLiveBenchScores(opts: FetchSourceOptions = {}): Promi
       });
     }
 
+    opts.captureLiveBench?.(csvText, categories);
     // The filename identifies the benchmark edition, not model evaluation time.
     return {
       source_id: id,
