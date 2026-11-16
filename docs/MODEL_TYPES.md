@@ -147,6 +147,32 @@ before advertising another integrated board.
 
 ## Validation
 
+For source/API reconciliation, first capture each public API response into
+`<board-id>.json` in an ignored directory. For example, with the local server running:
+
+```bash
+AUDIT_SITE=http://127.0.0.1:3000 npx tsx -e '
+import { mkdirSync, writeFileSync } from "node:fs";
+import { SPECIALIST_BOARDS } from "./src/lib/model-types";
+async function capture() {
+  mkdirSync("output/live-audit", { recursive: true });
+  for (const board of SPECIALIST_BOARDS) {
+    const response = await fetch(`${process.env.AUDIT_SITE}/api/leaderboards/${board.id}`);
+    if (!response.ok) throw new Error(`${board.id}: HTTP ${response.status}`);
+    writeFileSync(`output/live-audit/${board.id}.json`, await response.text());
+  }
+}
+void capture().catch(error => { console.error(error); process.exitCode = 1; });'
+npx tsx scripts/audit-specialist-data.ts output/live-audit
+npx tsx scripts/audit-specialist-data.ts output/live-audit --replay
+```
+
+The first audit fetches each registry `dataUrl` into `<board-id>.raw`; replay reads
+those saved inputs without network access. Ranks are checked against raw source
+values, while public fields are compared with licence-redacted expectations.
+Missing inputs, source drift and field/rank differences fail the audit; preserve
+the receipts and investigate before recapturing. Never commit these captures.
+
 `__tests__/specialist-presentation.test.ts` verifies selected-metric ranking, unchanged primary scores, ties/nulls/zero, reversed error-metric colors, and source coverage.
 
 `__tests__/specialist-columns.test.ts` verifies numeric sorting, null/zero handling, preserved ranks, metric directions, and optional task columns.
