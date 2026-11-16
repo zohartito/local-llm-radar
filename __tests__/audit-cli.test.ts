@@ -13,7 +13,7 @@ mkdirSync(root, { recursive: true });
 const directory = () => mkdtempSync(path.join(root, 'audit-'));
 const run = (args: string[]) => spawnSync(process.execPath, [
   '--require', './__tests__/fixtures/offline-runtime.cjs', '--import', 'tsx', ...args,
-], { encoding: 'utf8', timeout: 15000, env: { PATH: process.env.PATH, HOME: root } });
+], { encoding: 'utf8', timeout: 15000, env: { NODE_ENV: 'test', PATH: process.env.PATH, HOME: root } });
 const read = (out: string, file: string) => JSON.parse(readFileSync(path.join(out, file), 'utf8'));
 
 test('RAD-02: total upstream outage writes honest fallback receipts and fails', () => {

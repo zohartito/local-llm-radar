@@ -9,7 +9,7 @@ const run = (out: string, extraEnv: Record<string, string> = {}) => spawnSync(pr
   '--require', './__tests__/fixtures/measurement-runtime.cjs', '--import', 'tsx',
   'scripts/measure-local.ts', '--model', 'invented:1b', '--machine', 'synthetic',
   '--host', 'http://measurement.invalid', '--remote', '--runs', '1', '--out', out,
-], { encoding: 'utf8', timeout: 5000, env: { PATH: process.env.PATH, HOME: out, ...extraEnv } });
+], { encoding: 'utf8', timeout: 5000, env: { NODE_ENV: 'test', PATH: process.env.PATH, HOME: out, ...extraEnv } });
 
 test('RAD-01: repeated measurements preserve both receipts', () => {
   const out = directory();
