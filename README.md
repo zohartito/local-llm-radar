@@ -5,7 +5,7 @@ It aggregates other people's evaluations: it does not run text benchmarks or cer
 
 ## Run locally
 
-Node.js 20.9+ and npm.
+Node.js 20.19+ (20.x), 22.13+ (22.x), or 24+ and npm. These minimums include the locked lint tooling.
 
 ```bash
 npm ci
