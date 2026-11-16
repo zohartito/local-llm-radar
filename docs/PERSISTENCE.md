@@ -80,4 +80,11 @@ llmr:v2:snapshot:YYYY-MM-DD   { date, updated, scoringVersion, quality, ranks:{o
   Null without compatible history; default benchmark mode never reports index movement.
 
 ## Cost / footprint
-$0 on Upstash free (256 MB / 500K cmds·mo); history < 2 MB/year. One dependency.
+History size depends on ranked population, slug length and successful snapshot days. A local JSON sizing check of the `store.ts` snapshot shape (overall plus five category maps, identical ranked population in each, slugs `invented-model-0001` onward) gives:
+
+| Ranked models per list | JSON bytes/day | 365 daily snapshots | 400 daily snapshots |
+| --- | ---: | ---: | ---: |
+| 100 | 15,151 | 5.27 MiB | 5.78 MiB |
+| 382 | 59,143 | 20.59 MiB | 22.56 MiB |
+
+These are serialized JSON estimates, not measured Redis usage: multiply `Buffer.byteLength(JSON.stringify(snapshot))` by the number of retained days. Snapshot keys expire after 400 days; failed/unhealthy days write no snapshot. The dates index has no TTL, and Redis overhead, hot-cache blobs, scorecards and command usage are additional. Compare the total with the provider's current quotas; there is no fixed <2 MB/year bound.
