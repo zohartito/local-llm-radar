@@ -86,7 +86,7 @@ function specialistSnapshot(boardId: string) {
   return {
     boardId, benchmark: 'example', checkedAt: '2026-11-14T09:00:00Z', sourceUpdatedAt: null, status: 'source', stale: false,
     rows: [
-      { id: 'a', name: 'Model A', provider: 'Example', url: null, score: 81.25, openWeights: true, benchmarks: { part: 79.5 }, details: { Size: '7B', Votes: 1200 }, interval: [80, 82] },
+      { id: 'a', name: 'Model A', provider: 'Example', url: null, score: 81.25, openWeights: true, benchmarks: { part: 79.5 }, details: { Size: '7B', Votes: 1200 }, interval: [80, 82] as [number, number] },
       { id: 'b', name: 'Model B', provider: 'Example', url: null, score: 61.75, openWeights: false, details: {} },
     ],
   };
