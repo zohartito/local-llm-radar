@@ -3,16 +3,9 @@ import path from 'node:path';
 import { BENCHMARK_KEYS } from '@/lib/merge-models';
 
 /**
- * DATA-INTEGRITY tripwire over the REAL curated fallback dataset.
- *
- * These assertions are intentionally RED until the purge agent removes the
- * fabricated/copy-paste benchmark rows. On failure each test prints the exact
- * offending (benchmark, value, count) clusters and contradiction rows so the
- * purge agent can target them precisely.
- *
- * The dataset stores benchmark numbers as top-level numeric fields on each
- * model (e.g. `model.swe_bench`). We also read a nested `model.benchmarks[key]`
- * shape so this test keeps working if the dataset is later restructured.
+ * The committed roster contains metadata only. Its null-score invariant is
+ * checked explicitly below. Legacy numeric heuristics use nonempty invented
+ * data; passing them is not a claim about real publishers' benchmark accuracy.
  */
 
 interface CuratedModel {
@@ -56,14 +49,34 @@ const CODEFORCES_MAX = 4000;
 const CONTRADICTION_FLOOR = 20;
 const TOP_QUARTILE = 0.75;
 
-const models = loadModels();
+const curated = loadModels();
+// Invented observations exercise top-level and nested cells, valid limits and
+// repeated values without depending on scores in the metadata-only roster.
+const models: CuratedModel[] = Array.from({ length: 8 }, (_, index) => ({
+  name: `Invented model ${index + 1}`,
+  arena_elo: index === 7 ? 2600 : 600 + index * 200,
+  codeforces_elo: index === 7 ? 4000 : index * 400,
+  benchmarks: { swe_bench: index === 0 ? 0 : index === 7 ? 100 : 40 },
+}));
 
-describe('curated-models.json data integrity', () => {
+describe('RAD-14: roster invariant and synthetic numeric integrity checks', () => {
   it('loads a non-empty curated dataset', () => {
-    expect(models.length).toBeGreaterThan(0);
+    expect(curated.length).toBeGreaterThan(0);
   });
 
-  it('does not share any single benchmark value across more than 6 distinct models', () => {
+  it('keeps all committed benchmark cells null or absent', () => {
+    expect(curated.length).toBeGreaterThan(0);
+    for (const model of curated) {
+      for (const key of BENCHMARK_KEYS) {
+        expect(model[key] ?? null).toBeNull();
+        expect(model.benchmarks?.[key] ?? null).toBeNull();
+      }
+    }
+  });
+
+  it('synthetic data does not share any single benchmark value across more than 6 distinct models', () => {
+    // RAD-14: a passing numeric check must actually inspect numbers.
+    expect(models.some(model => BENCHMARK_KEYS.some(key => benchmarkValue(model, key) !== null))).toBe(true);
     const violations: Array<{ benchmark: string; value: number; count: number }> = [];
 
     for (const key of BENCHMARK_KEYS) {
@@ -83,7 +96,7 @@ describe('curated-models.json data integrity', () => {
         }
       }
       // Per-key invariant: the most-shared value must not exceed the threshold.
-      // (The detailed list is reported below for the purge agent.)
+      // Report the precise duplicate cluster on failure.
       expect(maxSharedCount).toBeLessThanOrEqual(MAX_SHARED_MODELS);
     }
 
@@ -96,7 +109,8 @@ describe('curated-models.json data integrity', () => {
     expect(violations).toEqual([]);
   });
 
-  it('keeps percentage benchmarks in [0,100] and ELO benchmarks in range (Arena 600-2000, Codeforces 0-4000)', () => {
+  it('synthetic data keeps percentage benchmarks in [0,100] and ELO benchmarks in range (Arena 600-2600, Codeforces 0-4000)', () => {
+    expect(models.some(model => BENCHMARK_KEYS.some(key => benchmarkValue(model, key) !== null))).toBe(true);
     const violations: string[] = [];
 
     for (const model of models) {
@@ -124,18 +138,13 @@ describe('curated-models.json data integrity', () => {
     expect(violations).toEqual([]);
   });
 
-  it('has no contradiction rows: a top-quartile model with a sub-floor percentage benchmark', () => {
+  it('synthetic data has no contradiction rows: a top-quartile model with a sub-floor percentage benchmark', () => {
     const eloValues = models
       .map((model) => benchmarkValue(model, 'arena_elo'))
       .filter((value): value is number => value !== null)
       .sort((a, b) => a - b);
 
-    // No ELO data means no contradiction can be derived; skip silently.
-    if (eloValues.length === 0) {
-      expect(true).toBe(true);
-      return;
-    }
-
+    expect(eloValues.length).toBeGreaterThan(0);
     const quartileThreshold = eloValues[Math.floor(eloValues.length * TOP_QUARTILE)];
     const violations: string[] = [];
 
