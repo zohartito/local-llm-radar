@@ -47,7 +47,7 @@ Tests use invented data (`__tests__/fixtures/`).
 Credits for every source live in `src/lib/source-credits.ts` (rendered at `/sources`
 and in the footer). Public JSON APIs pass through `src/lib/public-api.ts`: scores and
 ZeroEval prices from `withheldInApi` sources become null with source name/URL; facts,
-memory estimates and ranks stay. The six data pages are ISR server pages
+memory estimates and ranks stay. Specialist details retain only allowlisted facts/scope metadata; score-bearing and unknown keys stay withheld. The six data pages are ISR server pages
 (`force-static`, `revalidate = 300`) that pass `loadSiteLeaderboard()` to a client
 `*-view.tsx`; they never read `/api/leaderboard`.
 

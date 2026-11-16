@@ -70,14 +70,22 @@ export function redactModelForPublicApi<T extends PublicModel>(model: T, scoreSo
   };
 }
 
-/** Specialist boards without a redistribution licence keep ranks and identities, never values. */
+// Only known model facts and evaluation-scope metadata may survive. Unknown
+// details fail closed: some parsers store scores, prices and latency here.
+const SPECIALIST_FACT_DETAILS = new Set([
+  'Size', 'Type', 'Dimensions', 'Max tokens', 'Parameters (B)', 'Params (M)',
+  'License', 'Source license label', 'Reported date', 'Evaluation period',
+  'Language', 'Split', 'Frames', 'Subtitles', 'Evidence',
+]);
+
+/** Specialist boards without a redistribution licence keep ranks, identities and allowed facts. */
 export function redactSpecialistRowsForPublicApi<T extends SpecialistRow>(board: SpecialistBoard, rows: T[]): T[] {
   if (!isWithheldBoardSource(board.source)) return rows;
   return rows.map(row => ({
     ...row,
     score: null,
     benchmarks: row.benchmarks ? Object.fromEntries(Object.keys(row.benchmarks).map(key => [key, null])) : undefined,
-    details: {},
+    details: Object.fromEntries(Object.entries(row.details).filter(([key]) => SPECIALIST_FACT_DETAILS.has(key))),
     interval: undefined,
   }));
 }
