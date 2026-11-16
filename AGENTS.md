@@ -73,7 +73,7 @@ families, `RANK_MIN_FAMILY_COVERAGE` must scale with the new denominator or the
 board silently empties.
 
 ## Agent rules (all harnesses)
-- Local measurements use unique private run directories and exclusive receipt creation; `measurement-cli.test.ts` verifies repeated runs and existing-output refusal with synthetic responses.
+- Local measurements use unique private run directories and exclusive receipt creation; `measurement-cli.test.ts` verifies repeated runs and existing-output refusal with synthetic responses. Generation failures abort and await the sampler before exit.
 - Determinism boundary: anything that must be EXACT (money, geometry, safety limits, scoring, pricing) lives in code; the model only orchestrates and judges.
 - Hardware page contract: `hardware.ts` owns memory math; `hardware-ranking.ts` owns fit annotations and shared recommendation/table order. Use `fitHardwareModels` for both the full stack and primary GPU; preserve canonical catalog slugs instead of rebuilding IDs from display names. Keep system RAM separate from VRAM, preserve the 10% multi-GPU split reserve, and test both GPU scopes.
 - Keep this file current: when you change how this repo is run, tested, or structured, update AGENTS.md in the same commit. Keep it under ~150 lines.

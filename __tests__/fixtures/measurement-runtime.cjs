@@ -10,12 +10,20 @@ if (process.env.TEST_OUTPUT_SYMLINK) {
     return write(file, data, options);
   };
 }
-globalThis.fetch = async (url) => {
+globalThis.fetch = async (url, init) => {
   const route = new URL(url).pathname;
   if (route === '/api/version') return Response.json({ version: 'synthetic' });
   if (route === '/api/show') return Response.json({ details: { parameter_size: '1B' } });
-  if (route === '/api/ps') return Response.json({ models: [] });
+  if (route === '/api/ps') {
+    if (process.env.TEST_HANG_SAMPLER) return new Promise((resolve, reject) => {
+      const timer = setInterval(() => {}, 1000);
+      init.signal.addEventListener('abort', () => { clearInterval(timer); reject(init.signal.reason); }, { once: true });
+    });
+    return Response.json({ models: [] });
+  }
   if (route === '/api/generate') {
+    const body = JSON.parse(init.body);
+    if (body.prompt && process.env.TEST_GENERATION_ERROR) return Response.json({ error: 'synthetic generation failure' }, { status: 500 });
     return Response.json({ eval_count: 10, eval_duration: 1e9, prompt_eval_count: 20, prompt_eval_duration: 1e9 });
   }
   throw new Error(`Unexpected synthetic route: ${route}`);

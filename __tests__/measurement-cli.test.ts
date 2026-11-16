@@ -35,3 +35,11 @@ test('RAD-12: an existing output symlink is refused without changing its target'
   expect(result.status).toBe(1);
   expect(result.stderr).toContain('EEXIST');
 }, 10000);
+
+test.each(['', '1'])('RAD-04: generation failure exits and stops sampling (pending request=%s)', hang => {
+  const result = run(directory(), { TEST_GENERATION_ERROR: '1', TEST_HANG_SAMPLER: hang });
+  expect(result.stderr).toContain('synthetic generation failure');
+  expect(result.error).toBeUndefined();
+  expect(result.status).toBe(1);
+  expect(result.stdout).not.toContain('Wrote');
+}, 10000);

@@ -69,12 +69,12 @@ function parseArgs(argv: string[]): Options {
   };
 }
 
-async function api<T>(host: string, route: string, body?: unknown): Promise<T> {
+async function api<T>(host: string, route: string, body?: unknown, signal?: AbortSignal): Promise<T> {
   const response = await fetch(`${host}${route}`, {
     method: body === undefined ? 'GET' : 'POST',
     headers: body === undefined ? undefined : { 'content-type': 'application/json' },
     body: body === undefined ? undefined : JSON.stringify(body),
-    signal: AbortSignal.timeout(15 * 60_000),
+    signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(15 * 60_000)]) : AbortSignal.timeout(15 * 60_000),
   });
   const json = await response.json() as T & { error?: string };
   if (!response.ok || json.error) throw new Error(`Ollama ${route}: ${json.error ?? response.status}`);
@@ -126,10 +126,11 @@ function startSampler(opts: Options, blobDigest: string | null) {
   const peak = { ollamaReportedMiB: 0, ollamaReportedVramMiB: 0, processRssMiB: null as number | null, gpuUsedMiB: null as number[] | null, contextLength: null as number | null };
   const baseline = opts.remote ? null : nvidiaGpus()?.map(g => g.memoryUsedMiB) ?? null;
   let stopped = false;
+  const controller = new AbortController();
   const tick = async () => {
     while (!stopped) {
       try {
-        const ps = await api<{ models: PsModel[] }>(opts.host, '/api/ps');
+        const ps = await api<{ models: PsModel[] }>(opts.host, '/api/ps', undefined, controller.signal);
         const loaded = ps.models.find(m => m.name === opts.model || m.model === opts.model);
         if (loaded) {
           peak.ollamaReportedMiB = Math.max(peak.ollamaReportedMiB, Math.round(loaded.size / 2 ** 20));
@@ -149,6 +150,7 @@ function startSampler(opts: Options, blobDigest: string | null) {
   const loop = tick();
   return async () => {
     stopped = true;
+    controller.abort();
     await loop;
     return {
       ...peak,
@@ -193,25 +195,29 @@ async function main() {
 
   const stop = startSampler(opts, blobDigest);
   const runs = [];
-  for (let i = 1; i <= opts.runs; i++) {
-    const result = await api<GenerateResponse>(opts.host, '/api/generate', {
-      model: opts.model, prompt: prompt(i, opts.promptTokens), stream: false, keep_alive: '5m',
-      ...(opts.think === null ? {} : { think: opts.think }),
-      options: { num_ctx: opts.ctx, num_predict: opts.genTokens, temperature: 0, seed: 42 },
-    });
-    const row = {
-      run: i,
-      loadMs: ms(result.load_duration),
-      totalMs: ms(result.total_duration),
-      promptTokens: result.prompt_eval_count ?? null,
-      promptTokensPerSecond: tokensPerSecond(result.prompt_eval_count, result.prompt_eval_duration),
-      generatedTokens: result.eval_count ?? null,
-      generationTokensPerSecond: tokensPerSecond(result.eval_count, result.eval_duration),
-    };
-    console.log(JSON.stringify(row));
-    runs.push(row);
+  let peaks: Awaited<ReturnType<typeof stop>>;
+  try {
+    for (let i = 1; i <= opts.runs; i++) {
+      const result = await api<GenerateResponse>(opts.host, '/api/generate', {
+        model: opts.model, prompt: prompt(i, opts.promptTokens), stream: false, keep_alive: '5m',
+        ...(opts.think === null ? {} : { think: opts.think }),
+        options: { num_ctx: opts.ctx, num_predict: opts.genTokens, temperature: 0, seed: 42 },
+      });
+      const row = {
+        run: i,
+        loadMs: ms(result.load_duration),
+        totalMs: ms(result.total_duration),
+        promptTokens: result.prompt_eval_count ?? null,
+        promptTokensPerSecond: tokensPerSecond(result.prompt_eval_count, result.prompt_eval_duration),
+        generatedTokens: result.eval_count ?? null,
+        generationTokensPerSecond: tokensPerSecond(result.eval_count, result.eval_duration),
+      };
+      console.log(JSON.stringify(row));
+      runs.push(row);
+    }
+  } finally {
+    peaks = await stop();
   }
-  const peaks = await stop();
   await api(opts.host, '/api/generate', { model: opts.model, keep_alive: 0 });
 
   const warm = runs.slice(1);
