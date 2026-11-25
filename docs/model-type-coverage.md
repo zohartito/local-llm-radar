@@ -44,11 +44,7 @@ cannot receive an average rank; no other language/split/subtitle condition
 fills a gap. Exact identities with conflicting results reject the snapshot.
 All source metrics remain visible, and sorting one ranks only that metric.
 
-Only the six new fallback snapshots were added in this change, after all six
-live fetches succeeded. Existing fallback snapshot objects were preserved
-unchanged. The normal full manual capture remains all-or-nothing. No scheduler
-was added; parsed results use the existing one-hour Next Data Cache with the
-`specialist-boards-v8-ocr-audio-video` key and the full board scope in its key.
+The original October addition captured six fallback snapshots. The current licence policy no longer commits OCRBench, MMAU or Video-MME results. Manual capture is all-or-nothing only across boards with `snapshotLicence`; other boards return unavailable if live fetching fails. No scheduler was added; parsed results use the one-hour Next Data Cache with `specialist-boards-v9-vision-releases` and the full board scope in its key.
 
 ## Other important model types (before vision integration)
 
@@ -67,7 +63,7 @@ every model family has one valid universal leaderboard.
 `specialist-task-scopes.test.ts` covers period/language separation, zero and
 missing values, full/mini and subtitle isolation, metadata identity, header
 drift, duplicate conflicts and family navigation. The existing tests require
-an edition-matched, bounded fallback for every registered board. Live source
+an edition-matched, bounded fallback only for registered boards with `snapshotLicence`, and prohibit saved snapshots for other boards. Live source
 captures and independent per-cell replay are saved under ignored
 `output/board-sources/`; browser evidence is under `output/playwright/`.
 

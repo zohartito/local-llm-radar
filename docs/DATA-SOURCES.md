@@ -77,6 +77,7 @@ coverage counts are derived across sources and stay. Only scores are withheld
 (including LiveBench effort-variant scores), plus ZeroEval prices. Model facts
 (parameter counts, context windows, release dates) and our own memory and
 hardware-fit estimates stay in the responses.
+Specialist `details` preserves an explicit allowlist of model facts and scope metadata (size, dimensions/context, licence labels, reported dates, language/split and frame/subtitle settings). Score, price, latency, vote and unknown detail keys remain withheld.
 Site pages still show every source with credit (`/sources`, the footer, and a
 credit line on each specialist board); they read the snapshot server-side
 (`src/lib/site-leaderboard.ts`, ISR every 5 minutes), not through the API. The list lives in `src/lib/source-credits.ts`.

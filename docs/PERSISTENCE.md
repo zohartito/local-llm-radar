@@ -13,9 +13,10 @@ One free **Upstash Redis** database, three coordinated uses:
    but logical freshness is gated by `freshUntil` inside the value, so during a 429 storm
    instances serve the last-good shared data instead of all collapsing to a live re-fetch.
 2. **Daily rank snapshots** — a compact per-day time-series (`slug → rank`, overall + per
-   category) that powers the week-over-week **Trend** deltas (`↑n` / `↓n`) restored in
-   `ModelTable`. Fallback days are never snapshotted, so a bad-source day can't fabricate
-   rank movement.
+   category) used only by `/api/rankings?mode=index` for historical deltas. The active
+   dashboard has no Trend column; the unused `ModelTable` component is not mounted.
+   Same-test rankings never reuse index history. Fallback, stale and partial days are
+   never snapshotted.
 3. **Per-model scorecard cache, lease, and budget** — positive results are cached for
    15 minutes, unavailable results for 60 seconds, and a per-model lease ensures only one
    serverless instance fetches an upstream scorecard at a time.
@@ -45,14 +46,15 @@ For deployment and local integration testing:
    auto-injects `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` into the project env.
    (Pull the same two vars into `.env.local` for local testing.)
 2. Set `CRON_SECRET` in every environment as well, then redeploy. The shared
-   cache, scorecard coordination, and Trend column activate automatically.
+   cache and scorecard coordination become available. Index API history requires
+   healthy daily snapshots; connecting Redis does not add a dashboard Trend column.
 
 (`@upstash/redis` is already a dependency. "Vercel KV" is deprecated → Upstash is the path.)
 
 ## Keys (prefix `llmr:v2`, tracks `SCORING_VERSION`)
 ```
-llmr:v2:leaderboard:current   { data, freshUntil, staleUntil, scoringVersion }   EX 7d
-llmr:v2:refresh:lock          random token,  SET NX EX 120  (compare-and-delete release)
+llmr:v2:leaderboard:<SCORING_VERSION>:current   { data, freshUntil, staleUntil, scoringVersion }   EX 7d
+llmr:v2:refresh:<SCORING_VERSION>:lock          random token,  SET NX EX 120  (compare-and-delete release)
 llmr:v2:scorecard:<model>     {value}  EX 15m (or 60s negative cache)
 llmr:v2:scorecard-lease:<model> random token, SET NX EX 30 (compare-and-delete release)
 llmr:v2:scorecard-rate:<key>  atomic INCR + EX 60 (12 requests per key/window)
@@ -71,9 +73,18 @@ llmr:v2:snapshot:YYYY-MM-DD   { date, updated, scoringVersion, quality, ranks:{o
   TTL. CDN response TTL is no greater than the 15-minute shared positive-cache TTL.
 - **Cron** (`/api/refresh/cron`, daily): force-refresh only on a lock-winning proven-live
   result, then `writeDailyRankSnapshot()`; fallback/stale/error results are never snapshotted.
-- **Trend** (`/api/rankings`): joins current ranks against the snapshot nearest `today − 7d`
-  (±3-day window so a missed cron day doesn't blank it) and fills `rank_change` /
-  `previous_rank` / `trend_snapshot_date`. Null until ≥1 week of history exists.
+- **Index history** (`/api/rankings?mode=index`): joins current index ranks against the newest valid snapshot 7–10 days old
+  (searching backward only, skipping missing or malformed days) and fills `rank_change` /
+  `previous_rank`, with response-level `trendSnapshotDate`. Requires a healthy current-method
+  snapshot on both sides and the all-model population (`local=true` has no delta).
+  Null without compatible history; default benchmark mode never reports index movement.
 
 ## Cost / footprint
-$0 on Upstash free (256 MB / 500K cmds·mo); history < 2 MB/year. One dependency.
+History size depends on ranked population, slug length and successful snapshot days. A local JSON sizing check of the `store.ts` snapshot shape (overall plus five category maps, identical ranked population in each, slugs `invented-model-0001` onward) gives:
+
+| Ranked models per list | JSON bytes/day | 365 daily snapshots | 400 daily snapshots |
+| --- | ---: | ---: | ---: |
+| 100 | 15,151 | 5.27 MiB | 5.78 MiB |
+| 382 | 59,143 | 20.59 MiB | 22.56 MiB |
+
+These are serialized JSON estimates, not measured Redis usage: multiply `Buffer.byteLength(JSON.stringify(snapshot))` by the number of retained days. Snapshot keys expire after 400 days; failed/unhealthy days write no snapshot. The dates index has no TTL, and Redis overhead, hot-cache blobs, scorecards and command usage are additional. Compare the total with the provider's current quotas; there is no fixed <2 MB/year bound.
